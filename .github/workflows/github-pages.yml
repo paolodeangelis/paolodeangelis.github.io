@@ -16,6 +16,11 @@ jobs:
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile') }}
           restore-keys: |
             ${{ runner.os }}-gems-
+      - name: Get the newest rubygems version to rid ourselves of warnings
+        run: gem update --system --no-document
+
+      - name: Install bundler
+        run: gem i bundler --no-document
       - uses:  helaili/jekyll-action@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
