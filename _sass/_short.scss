@@ -1,0 +1,133 @@
+.short_title{
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// .short_title h1{
+//     position: relative;
+//     width: max-content;
+// }
+// .short_title h1:before {
+//     content: " ";
+//     position: absolute;
+//     top: 50%;
+//     height: 2px;
+//     width: 80px;
+//     margin: 0 10px;
+//     // left: 0;
+//     display: inline-block;
+//     background: #191970;
+//     zoom: 1;
+//   }
+
+// .short_title h1:after {
+//     content: " ";
+//     position: absolute;
+//     top: 50%;
+//     height: 2px;
+//     width: 80px;
+//     margin: 0 10px;
+//     // right: 0;
+//     display: inline-block;
+//     background: #191970;
+//     zoom: 1;
+//   }
+
+.short_title h1 {
+    position: relative;
+  }
+
+
+ [data-theme="dark"] {
+    .short_title h1:before {
+        content: "";
+        display: inline-block;
+        width: 80px;
+        height: 2px;
+        margin: 0 10px;
+        background: $light;
+        left: 100%;
+        top: 50%;
+        position: absolute;
+      }
+      
+    .short_title h1:after {
+        content: "";
+        display: inline-block;
+        width: 80px;
+        height: 2px;
+        margin: 0 10px;
+        background: $light;
+        right: 100%;
+        top: 50%;
+        position: absolute;
+      }
+}
+    
+
+
+  [data-theme="light"] {
+    .short_title h1:before {
+        content: "";
+        display: inline-block;
+        width: 80px;
+        height: 2px;
+        margin: 0 10px;
+        background: $dark;
+        left: 100%;
+        top: 50%;
+        position: absolute;
+      }
+      
+    .short_title h1:after {
+        content: "";
+        display: inline-block;
+        width: 80px;
+        height: 2px;
+        margin: 0 10px;
+        background: $dark;
+        right: 100%;
+        top: 50%;
+        position: absolute;
+      }
+    }
+
+
+    .quotation{
+        font-size: 20px;
+        //margin: 0 auto;
+        quotes: "\201C""\201D""\2018""\2019";
+        padding: 10px 20px;
+        line-height: 1.4;
+      }
+      
+      .quotation:before {
+        content: open-quote;
+        display: inline;
+        height: 0;
+        line-height: 0;
+        left: -10px;
+        position: relative;
+        top: 30px;
+        color: #6c757d;
+        font-size: 3em;
+      }
+      .quotation::after {
+        content: close-quote;
+        display: inline;
+        height: 0;
+        line-height: 0;
+        left: 10px;
+        position: relative;
+        top: 35px;
+        color: #6c757d;
+        font-size: 3em;
+      }
+      footer{
+        margin:0;
+        text-align: right;
+        font-size: 1.5em;
+        font-style: italic;
+      }

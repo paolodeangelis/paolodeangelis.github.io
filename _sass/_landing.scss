@@ -1,0 +1,194 @@
+// Fine Circle Responsive Image
+// Inspired by https://stackoverflow.com/a/6615994/10194811
+
+
+
+#container1 {
+  position: absolute;
+	top: calc(50vh - 250px);
+	right: 50%;
+	transform: translate(50%,-50%);
+  max-width: 90%;
+  min-width: 300px;
+	// padding: 3em 3em;
+}
+
+#container2 {
+  position: absolute;
+	top: calc(100vh - 150px);
+	right: 50%;
+	transform: translate(50%,-50%);
+  max-width: 80%;
+	// padding: 3em 3em;
+}
+
+#dummy {
+  padding-top: 100%; /* 1:1 aspect ratio */
+}
+
+[data-theme="dark"] {
+#particles-js{
+  background:#1a222c;
+  display:flex;
+  vertical-align:bottom;
+  min-height:calc(100vh - 3rem - 14px);
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-attachment:fixed
+}
+}
+
+[data-theme="light"] {
+  #particles-js{
+    background:#ffffff;
+    display:flex;
+    vertical-align:bottom;
+    min-height:calc(100vh - 3rem - 14px);
+    background-repeat:no-repeat;
+    background-size:cover;
+    background-attachment:fixed
+  }
+  }
+
+.particles-js-canvas-el{
+  height:calc(100vh - 3rem - 14px)!important
+}
+ 
+
+#element {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.circle-image {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
+
+.header-links{
+  margin:10px
+}
+
+
+
+@media only screen and (min-width:768px){
+  .header-icons .icon{
+    width:30px;
+    height:30px;
+    font-size:30px;
+    line-height:30px
+  }
+}
+.down{
+  position:absolute;
+  bottom:30px;
+  width:100%;
+  margin:0 auto;
+  display:block;
+  font-size:30px;
+  line-height:30px;
+  cursor:pointer;
+  border:none!important;
+}
+
+[data-theme="dark"] {
+  .header-links 
+.link{
+  color:#fff;
+  text-decoration:none;
+  font-size:15px;
+  margin:10px
+}
+@media only screen and (min-width:768px){.header-links .link{font-size:20px}}
+  .down,.header-icons 
+  .icon{
+    color:#fff;
+    text-align:center
+  }.header-icons .icon{
+    height:20px;
+    padding:10px;
+    border-radius:50%;
+    transition:all .5s;
+    width:20px;
+    font-size:
+    20px;
+    margin:5px;
+    border:2px solid #fff
+  }.header-icons .icon:active,.header-icons .icon:hover{
+    color:#1a222c;
+    background:#fff
+  }
+.down .icon{
+  position:absolute;
+  // -webkit-transform-style:preserve-3d;
+  transform-style:preserve-3d;
+  // top:50%;
+  // right:calc(45vw);
+  // -webkit-transform:translate(-50%,-50%);
+  // transform:translate(-50%,-50%);
+  // transform: translate(50%,-50%);
+  // width:100px;
+  // height:100px;
+  fill:#fff;
+  -webkit-animation:pulse 1.3s infinite;
+  animation:pulse 1.3s infinite
+}.down 
+.icon:active,.down .icon:hover,.footer a:active,.footer a:hover{
+  color:#4b5664
+}
+}
+[data-theme="light"] {
+  .header-links 
+  .link{
+    color:#6c757d;
+    text-decoration:none;
+    font-size:15px;
+    margin:10px
+  }
+  @media only screen and (min-width:768px){.header-links .link{font-size:20px}}
+  .down,.header-icons 
+.icon{
+  color:#6c757d;
+  text-align:center
+}.header-icons .icon{
+  height:20px;
+  padding:10px;
+  border-radius:50%;
+  transition:all .5s;
+  width:20px;
+  font-size:
+  20px;
+  margin:5px;
+  border:2px solid #6c757d
+}.header-icons .icon:active,.header-icons .icon:hover{
+  color:#6c757d;
+  background:#6c757d
+}
+  .down .icon{
+    position:absolute;
+    // -webkit-transform-style:preserve-3d;
+    transform-style:preserve-3d;
+    // top:50%;
+    // right:calc(45vw);
+    // -webkit-transform:translate(-50%,-50%);
+    // transform:translate(-50%,-50%);
+    // transform: translate(50%,-50%);
+    // width:100px;
+    // height:100px;
+    fill:#6c757d;
+    -webkit-animation:pulse 1.3s infinite;
+    animation:pulse 1.3s infinite
+  }.down 
+  .icon:active,.down .icon:hover,.footer a:active,.footer a:hover{
+    color:#343a40
+  }
+  }
+// #about{font-size:120%;width:90%;margin:0 auto;max-width:960px}@media only screen and (min-width:768px){#about{width:80%}}#about svg{width:60px!important;height:auto}.tech{margin:10px;flex:1 1 0}.tech h2,.tech h3,.user-details h1,body{font-weight:400}.user{text-align:center;font-size:60px;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:space-between}.user p{font-size:16px}@media only screen and (min-width:768px){.user{flex-wrap:nowrap;font-size:75px}}.user-details{text-align:center;margin:5px auto}.footer{background:#1a222c;padding:10px 0;margin-top:100px;text-align:center;color:#fff}.footer .love{color:red}.footer a{text-decoration:none;margin:0;color:#fff}

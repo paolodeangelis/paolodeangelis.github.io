@@ -1,0 +1,46 @@
+html {
+  // padding-left: calc(100vw - 100%);
+  padding-left: 0;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.bg-light,
+.badge-light {
+  &,
+  * {
+    color: $text-black !important;
+  }
+}
+
+.bg-dark,
+.badge-dark {
+  &,
+  * {
+    color: $text-white !important;
+  }
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // height: 100vh;
+
+  // /* CSS just to show the bounds */
+  // border: 2px solid;
+  // background-color: #eee
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  // width: 50%;
+}
