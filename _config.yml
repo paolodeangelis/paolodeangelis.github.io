@@ -105,6 +105,7 @@ defaults:
 ### Exclude from processing ###
 exclude:
   - [vendor]
+  - vendor
   - README.md
   - CONTRIBUTING.md
   - LICENSE

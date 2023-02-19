@@ -1,16 +1,36 @@
 // Fine Circle Responsive Image
 // Inspired by https://stackoverflow.com/a/6615994/10194811
 
+@media screen and (max-width: 350px) {
+  #hideifsmall {
+    visibility: hidden;
+    clear: both;
+    float: left;
+    margin: 10px auto 5px 20px;
+    width: 28%;
+    display: none;
+  }
+}
 
+@media screen and (max-height: 660px) {
+  #hideifsmall {
+    visibility: hidden;
+    clear: both;
+    float: left;
+    margin: 10px auto 5px 20px;
+    width: 28%;
+    display: none;
+  }
+}
 
 #container1 {
   position: absolute;
 	// top: calc(50vh - 270px);
-  top: 50vh;
+  top: max(calc(50vh - min(60vw, 330px)/2), calc(300px - min(60vw, 330px)/2));
 	right: 50%;
-	transform: translate(50%,calc(-20vh));
-  max-width: 65vw;
-  min-width: min(65vw, 320px);
+	transform: translate(50%,calc(-20vh + min(65vw, 330px)/2));
+  max-width: 60vw;
+  min-width: min(60vw, 330px);
   // min-width: 200px;
   // width: 350px;
 	// padding: 3em 3em;
@@ -18,10 +38,18 @@
 
 #container2 {
   position: absolute;
-	top: calc(100vh - 150px);
+	// top: calc(50vh - 270px);
+  top: max(calc(50vh + min(60vw, 330px)/2), calc(300px + min(60vw, 330px)/2));
 	right: 50%;
-	transform: translate(50%,-50%);
-  max-width: 80%;
+	transform: translate(50%,calc(-20vh + min(60vw, 330px)/2));
+  max-width: 90vw;
+  width: min(90vw, 420px);
+  min-width: min(60vw, 330px);
+  // position: absolute;
+	// top: calc(100vh - 150px);
+	// right: 50%;
+	// transform: translate(50%,-50%);
+  // max-width: 80%;
 	// padding: 3em 3em;
 }
 
@@ -34,7 +62,8 @@
   background:#1a222c;
   display:flex;
   vertical-align:bottom;
-  min-height:calc(100vh - 3rem - 14px);
+  height: calc(100vh - 3rem - 14px);
+  min-height:600px;
   background-repeat:no-repeat;
   background-size:cover;
   background-attachment:fixed
@@ -46,7 +75,8 @@
     background:#ffffff;
     display:flex;
     vertical-align:bottom;
-    min-height:calc(100vh - 3rem - 14px);
+    height: calc(100vh - 3rem - 14px);
+    min-height:600px;
     background-repeat:no-repeat;
     background-size:cover;
     background-attachment:fixed
@@ -68,11 +98,12 @@
 
 .circle-image {
   display: block;
-  width: min(65vw, 320px);
+  width: min(calc(60vw), 330px);
   min-width: 150px;
   border-radius: 50%;
   // right: 50%;
   // object-fit: cover;
+  // transform: translate(50%, 50%);
   object-position: center;
 }
 
@@ -93,7 +124,10 @@
 }
 .down{
   position:absolute;
-  bottom:30px;
+  top:max(calc(100vh - 3rem -30px), 600px);
+  // top: calc(50vh + min(65vw, 330px)/2);
+	right: 50%;
+	transform: translate(50%,0%);
   width:100%;
   margin:0 auto;
   display:block;
@@ -101,6 +135,7 @@
   line-height:30px;
   cursor:pointer;
   border:none!important;
+  object-position: center;
 }
 
 [data-theme="dark"] {
