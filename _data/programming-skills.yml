@@ -1,11 +1,33 @@
-- name: HTML5/CSS3
+- name: Python 3
   percentage: 90
-  color: danger
+  color: 4584b6
 
-- name: Go
+- name: MatLab
+  percentage: 85
+  color: d86a0b
+
+- name: Bash/Bourne shell
   percentage: 80
-  color:
+  color: 062938
 
-- name: Python
-  percentage: 70
-  color: secondary
+- name: LaTeX
+  percentage: 80
+  color: 027f81
+
+- name: C
+  percentage: 65
+  color: 4d57ff
+
+- name: C++
+  percentage: 60
+  color: 014380
+
+- name: Fortran
+  percentage: 60
+  color: 744e97
+
+- name: HTML5/CSS3
+  percentage: 50
+  color: e34f26
+
+

@@ -30,6 +30,7 @@
   a:not(.btn):not([class^="carousel-"]):not([class^="list-"]):not(.no-underline) {
     display: inline-block;
     text-decoration: none;
+    color: #0081C9;
 
     &:hover {
       color: $primary;

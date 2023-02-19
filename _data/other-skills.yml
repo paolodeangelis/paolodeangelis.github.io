@@ -1,7 +1,32 @@
-- name: Adobe Photoshop
-  percentage: 95
-  color: info
-
 - name: Adobe Illustrator
   percentage: 90
-  color: success
+  color: f29200
+
+- name: Adobe Photoshop
+  percentage: 85
+  color: 257dbf
+
+- name: Adobe InDesign
+  percentage: 70
+  color: eb4e68
+
+- name: Adobe Premiere
+  percentage: 70
+  color: 969af4
+
+- name: Arduino
+  percentage: 85
+  color: 199198
+
+- name: Microsoft Word
+  percentage: 98
+  color: 115abe
+
+- name: Microsoft PowerPoint
+  percentage: 95
+  color: c53c16
+
+- name: Microsoft Excel
+  percentage: 85
+  color: 077d3f
+

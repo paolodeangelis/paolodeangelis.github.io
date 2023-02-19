@@ -1,17 +1,52 @@
-- title: Student, Harvard CS
-  from: 2014
-  to: 2018
-  description: Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-               sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-               Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-               nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-               reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-
-- title: Software Engineer, Google, UK
-  from: 2018
+- title: Research Fellow in Energetics, Politecnico di Torino, IT
+  from: 2022
   to: present
-  description: Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-               sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-               Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-               nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-               reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+  description: As a Postdoctoral researcher, I am currently focused on advancing my research 
+               by further developing models for <a href='https://en.wikipedia.org/wiki/Lithium-ion_battery'>Lithium-Ion Batteries</a> degradation phenomena and 
+               creating <a href='https://www.nature.com/articles/npjcompumats201511'>Reactive Potential</a> s and 
+               <a href='https://pubs.acs.org/doi/10.1021/acs.chemrev.0c01111'>Neural Network Force Fields</a> for atomistic simulations
+
+- title: PhD in Energetics, Politecnico di Torino, IT
+  from: 2018
+  to: 2022
+  description: During my PhD, I honed my engineering, mathematical, and physical skills in materials science 
+               for energy applications, specifically 
+               <a href='https://en.wikipedia.org/wiki/Nanofluid'>Nanofluids</a> and 
+               <a href='https://en.wikipedia.org/wiki/Lithium-ion_battery'>Lithium-Ion Batteries</a>. 
+               I earned a PhD degree with a grade of 110L after successfully defending my thesis titled 
+               "<i>Reactive and Non-Reactive Interface Modelling for Energy Materials."</i>
+
+- title: Visiting PhD Student, University of Illinois at Chicago, USA
+  from: 02/2020
+  to: 09/2020
+  description: During my visit at the UIC (which was partially affected by the 
+               <a href='https://en.wikipedia.org/wiki/COVID-19_pandemic'>COVID-19 pandemic</a>), 
+               I applied <a href='https://en.wikipedia.org/wiki/Convolutional_neural_network'>Convolutional Neural Network</a>
+               models to study and predict battery thermal runaway.
+
+- title: MSc in Mechanical Engineering, Politecnico di Torino, IT
+  from: 2015
+  to: 2017
+  description: I completed the course of study held in English and graduated with a grade of 110,
+               along with writing a thesis titled <i>"Simulation of the ensemble and cycle-resolved 
+               combustion processesin a <a href='https://www.mdpi.com/2076-3417/9/22/4842'>NG-H2 engine</a>."</i>
+
+- title: Student internship, MCA Engineering Torino, IT
+  from: 03/2017
+  to: 09/2017
+  description: As a student intern, I worked on a project related to the GasOn initiative, a European effort led by Renault and involving several automobile manufacturers. My role focused on studying numerical stability and combustion model efficiency
+
+- title: BSc in Mechanical Engineering, Politecnico di Torino, IT
+  from: 2012
+  to: 2017
+  description: I completed my Mechanical Engineering course held in Italian, and I earned a BSc degree with a grade of 107
+               with a thesis titled <i>"<a href='https://en.wikipedia.org/wiki/Quaternion'>Quaternion</a> application to 3D roto-translation on simulative environment."</i>
+
+- title: Apprentice worker, Real Due s.a.s., IT
+  from: 2009
+  to: 2012
+  description: During the summer breaks, I worked as an apprentice in a job shop, 
+               I helped produce intermediate materials and drew components for external suppliers, 
+               gaining experience with manual drilling machines, MIG welders, and bandsaws. 
+               I also learned to carry out basic tasks like bearing mounting, assembly, and electrical motor maintenance.
+

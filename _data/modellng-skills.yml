@@ -1,0 +1,19 @@
+- name: Molecular Dynamics (MD)
+  percentage: 90
+  color: 6ECCAF
+
+- name: Density Functional Theory (DFT)
+  percentage: 75
+  color: 6096B4
+
+- name: Computational fluid dynamics (CFD)
+  percentage: 70
+  color: 5BC0F8
+
+- name: Monte Carlo (MC)
+  percentage: 65
+  color: E96479
+
+- name: Finite Element Method (FEM)
+  percentage: 60
+  color: 495579

@@ -1,0 +1,11 @@
+- name: Windows OS
+  percentage: 95
+  color: 0078d7
+
+- name: Linux OS
+  percentage: 85
+  color: f05924
+
+- name: Mac OS
+  percentage: 70
+  color: c32ca9
