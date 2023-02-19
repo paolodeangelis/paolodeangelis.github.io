@@ -1,0 +1,13 @@
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor
+.sass-cache/
+.jekyll-metadata
+node_modules
+.vscode
+_site/
+*/*.psd
+*/*.ai
+
