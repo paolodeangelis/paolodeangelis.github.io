@@ -57,6 +57,9 @@ collections:
   projects:
     output: true
     permalink: /projects/:name
+  articles:
+    output: true
+    permalink: /articles/:name
   elements:                                             # For Documentation Only
     output: true                                        # For Documentation Only
 
@@ -88,6 +91,11 @@ defaults:
   - scope:
       path: ""
       type: "projects"
+    values:
+      layout: "page"
+  - scope:
+      path: ""
+      type: "journalArticles"
     values:
       layout: "page"
   - scope:                                              # For Documentation Only

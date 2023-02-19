@@ -1,0 +1,41 @@
+<div class="wow animated fadeIn" data-wow-delay=".15s">
+  <a href="{{ article_url }}" class="article card text-themed"  target="_blank" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
+    {%- if article_img -%}
+    <img id="{{ article_id }}-img" class="card-img-top" src="{{ article_img }}" alt="{{ article_title }}" />
+    {%- endif -%}
+    <div class="card-body">
+      <p id="{{ article_id }}-author" class="card-text">
+        <h5>
+          {{ article_author }}
+        </h5>
+      </p>
+      <h4 id="{{ article_id }}-title" class="card-title">
+        {{ article_title }}
+      </h4>      
+      <p id="{{ article_id }}-journal" class="card-text" >
+        <i>{{ article_journal }}</i> 
+        {% if article_volume %}
+        {{ article_volume }},
+        {% endif %}
+        {% if article_number %}
+        no. {{ article_number }}, 
+        {% endif %}
+        {% if article_year %}
+        ({{ article_year }}) 
+        {% endif %}
+        {% if article_pages %}
+        : {{ article_pages }}
+        {% endif %}
+        .
+      </p>
+      <p id="{{ article_id }}-keywords" class="card-text">
+        {%- for keyword in article_keywords -%}
+        <span class="badge badge-pill badge-keywords ml-1">{{ keyword }}</span>
+        {%- endfor -%}
+      </p>
+      <div id="{{ article_id }}-year" class="card-text" style="text-align: right;">
+        <small class="text-muted"> Publication Date {{ article_day }}/{{ article_month }}/{{ article_year }}  </small>
+      </div>
+    </div>
+  </a>
+</div>

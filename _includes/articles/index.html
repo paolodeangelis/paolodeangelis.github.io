@@ -1,0 +1,29 @@
+<div class="card-columns m-3 mt-5">
+
+{% assign article_sorted = site.articles  | sort: 'year' %}
+
+{% for article in article_sorted reversed %}
+{%- assign article_id    = article.title | slugify -%}
+{%- assign article_img   = article.image -%}
+{%- assign article_author  = article.author -%}
+{%- assign article_title = article.title -%}
+<!-- {%- assign article_desc  = article.description -%} -->
+{%- assign article_keywords = article.keywords -%}
+{%- assign article_year = article.year -%}
+{%- assign article_month = article.month -%}
+{%- assign article_day = article.day -%}
+{%- assign article_journal = article.journal -%}
+{%- assign article_volume = article.volume -%}
+{%- assign article_number = article.number -%}
+{%- assign article_pages = article.pages -%}
+
+<!-- {%- assign article_url = article.url | relative_url -%}
+{%- assign external    = false -%} -->
+{%- assign article_url = article.doi -%}
+{%- assign external    = true -%}
+
+{% include articles/article-card.html %}
+
+{% endfor %}
+
+</div>
