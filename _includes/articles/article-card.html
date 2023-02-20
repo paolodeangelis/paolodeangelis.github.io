@@ -1,3 +1,6 @@
+<link src="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+
 <div class="wow animated fadeIn" data-wow-delay=".15s">
   <a href="{{ article_url }}" class="article card text-themed"  target="_blank" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
     {%- if article_img -%}
@@ -28,11 +31,40 @@
         {% endif %}
         .
       </p>
+
+      <!-- <div id="{{ article_id }}-abstract" class="abstract_box center mt-0 mb-4" data-toggle="tooltip" data-placement="auto" data-original-title="{{ article_abstract }}">
+        <div class="abstract_box center" style="text-align: center">
+          Abstract <i class="far fa fa-info-circle"></i>
+       </div>
+      </div> -->
+
+      <div id="{{ article_id }}-abstract" class="abstract_box center mt-0 mb-4">
+        <Tooltip title="{{ article_abstract }}" followCursor >
+          <div class="abstract_box center" style="text-align: center;">
+          Abstract <i class="far fa fa-info-circle"></i>
+          </div>
+      </Tooltip>
+    </div>
+
       <p id="{{ article_id }}-keywords" class="card-text">
         {%- for keyword in article_keywords -%}
         <span class="badge badge-pill badge-keywords ml-1">{{ keyword }}</span>
         {%- endfor -%}
       </p>
+
+    
+    
+    <!-- <div id="{{ article_id }}-abstract"  class="hover-text center"> -->
+      <!-- Abstract -->
+      <!-- <div id="{{ article_id }}-abstract" class="abstract_box center"> -->
+        <!-- <span class="tooltip-text" id="top"> -->
+          <!-- {{ article_abstract }} -->
+        <!-- </span> -->
+      <!-- </div> -->
+    <!-- </div> -->
+
+
+
       <div id="{{ article_id }}-year" class="card-text" style="text-align: right;">
         <small class="text-muted"> Publication Date {{ article_day }}/{{ article_month }}/{{ article_year }}  </small>
       </div>
