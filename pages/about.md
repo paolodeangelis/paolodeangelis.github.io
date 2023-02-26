@@ -18,6 +18,12 @@ In recent years, I have leveraged my experience in GPU computing to build and tr
 
 My passion for exploring new computational tools and modeling techniques has enabled me to stay at the forefront of my field, and I am trying to push, together with all the other colleagues, the boundaries of human knowledge 🚀.
 
+<div class="align-items-center short_title justify-content-center">
+    <a class="m-1 btn btn-outline-info btn-md" href="../docs/CV-Paolo_De_Angelis.pdf">
+        <svg class="svg-icon-fw"><use xlink:href="#icon-download"></use></svg> Resume
+    </a>
+</div>
+
 <div class="row">
 {% include about/skills.html title="Programming Skills" source=site.data.programming-skills %}
 {% include about/skills.html title="Other Skills" source=site.data.other-skills %}

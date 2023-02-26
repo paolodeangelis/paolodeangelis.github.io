@@ -20,3 +20,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target_branch: 'gh-pages'
+      - name: Check for broken links
+        run: |
+          bundle exec htmlproofer --log-level :debug ./_site &> links.log
+        continue-on-error: true
+      - name: Archive log links
+        uses: actions/upload-artifact@v1
+        with:
+          name: links-check.log
+          path: links.log

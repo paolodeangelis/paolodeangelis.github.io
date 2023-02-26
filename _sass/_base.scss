@@ -48,3 +48,25 @@ body {
 .noBorder {
   border:none !important;
 }
+
+.svg-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+
+  .fw{
+  text-align: center;
+  height: 1em;
+  width: 1.25em !important;
+  }
+}
+
+
+.svg-icon-fw {
+  display: inline-block;
+  width: 1.25em !important;
+  height: 1em;
+  fill: currentColor;
+  text-align: center;
+}

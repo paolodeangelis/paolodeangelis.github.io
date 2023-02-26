@@ -10,4 +10,5 @@ node_modules
 _site/
 */*.psd
 */*.ai
+venv/
 

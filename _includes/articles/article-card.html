@@ -14,17 +14,17 @@
       </p>
       <h4 id="{{ article_id }}-title" class="card-title">
         <strong> {{ article_title }} </strong>
-      </h4>      
+      </h4>
       <p id="{{ article_id }}-journal" class="card-text" >
-        <i>{{ article_journal }}</i> 
+        <i>{{ article_journal }}</i>
         {% if article_volume %}
         {{ article_volume }},
         {% endif %}
         {% if article_number %}
-        no. {{ article_number }}, 
+        no. {{ article_number }},
         {% endif %}
         {% if article_year %}
-        ({{ article_year }}) 
+        ({{ article_year }})
         {% endif %}
         {% if article_pages %}
         : {{ article_pages }}
@@ -52,8 +52,8 @@
         {%- endfor -%}
       </p>
 
-    
-    
+
+
     <!-- <div id="{{ article_id }}-abstract"  class="hover-text center"> -->
       <!-- Abstract -->
       <!-- <div id="{{ article_id }}-abstract" class="abstract_box center"> -->

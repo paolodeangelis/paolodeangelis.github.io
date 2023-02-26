@@ -10,7 +10,7 @@
 
         {%- assign project = repo -%}
         {%- assign words = project.name | split: '-' -%}
-        
+
         {%- capture titlecase -%}
           {%- for word in words -%}
             {{ word | capitalize | append: ' ' }}
