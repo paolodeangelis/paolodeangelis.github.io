@@ -1,21 +1,39 @@
 <div class="wow animated fadeIn" data-wow-delay=".15s">
+  {%- if project_style == "european" -%}
+  <a href="{{ project_url }}" class="project card cart-eu text-themed" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
+  {%- else -%}
   <a href="{{ project_url }}" class="project card text-themed" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
+  {%- endif -%}
     {%- if project_img -%}
     <img id="{{ project_id }}-img" class="card-img-top" src="{{ project_img }}" alt="{{ project_name }}" />
     {%- endif -%}
     <div class="card-body">
-      <h5 id="{{ project_id }}-name" class="card-title">
+      <h4 id="{{ project_id }}-name" class="card-title">
           {%- if project_type == "remote" -%}
           <i class="fab fa-github" data-toggle="tooltip" data-placement="bottom" data-delay="250" title="GitHub Repository"></i> |&nbsp;
           {%- endif -%}
-        {{ project_name }}
-      </h5>
+       <strong> {{ project_name }} </strong>
+      </h4>
       <p id="{{ project_id }}-desc" class="card-text">{{ project_desc }}</p>
-      <p id="{{ project_id }}-tools" class="card-text">
-        {%- for tool in project_tools -%}
-        <span class="badge badge-pill text-primary border border-primary ml-1">{{ tool }}</span>
+      <p id="{{ project_id }}-keywords" class="card-text">
+        {%- for keywords in project_keywords -%}
+        <span class="badge badge-pill badge-keywords ml-1">
+          {{ keywords }}
+        </span>
         {%- endfor -%}
       </p>
+      <p id="{{ project_id }}-tools" class="card-text">
+        {%- for tool in project_tools -%}
+        <span class="badge badge-pill badge-tools ml-1">
+          {{ tool }}
+        </span>
+        {%- endfor -%}
+      </p>
+      {%- if project_grant_number and project_style == "european" -%}
+      <div id="{{ project_id }}-year" class="card-text" style="text-align: right;">
+        <small class="text-muted"> Grant agreement No {{ project_grant_number }} <img style='vertical-align:middle; height: 22px;' src='../img/EUflag.jpg'></small>
+      </div>
+      {%- endif -%}
     </div>
   </a>
 </div>

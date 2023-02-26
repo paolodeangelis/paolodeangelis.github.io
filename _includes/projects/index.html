@@ -24,6 +24,8 @@
         {%- assign project_desc  = project.description -%}
         {%- assign project_url   = project.html_url -%}
         {%- assign project_tools = project.topics -%}
+        {%- assign project_keywords = project.keywords -%}
+        {%- assign project_style = project.style -%}
         {%- assign external      = true -%}
 
         {% include projects/project-card.html %}
@@ -35,7 +37,7 @@
   {% endfor %}
 
   <!-- Local Projects -->
-  {% for project in site.projects %}
+  {% for project in site.projects reversed %}
 
     {%- assign project_type  = "local" -%}
     {%- assign project_id    = project.name | slugify -%}
@@ -43,6 +45,9 @@
     {%- assign project_name  = project.name -%}
     {%- assign project_desc  = project.description -%}
     {%- assign project_tools = project.tools -%}
+    {%- assign project_keywords = project.keywords -%}
+    {%- assign project_style = project.style -%}
+    {%- assign project_grant_number = project.grant_number -%}
 
     {%- if project.external_url -%}
       {%- assign project_url = project.external_url -%}
