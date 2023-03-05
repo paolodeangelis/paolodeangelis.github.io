@@ -11,6 +11,8 @@ open_new_tab        : false                             # Opens external URLs in
 ### Plugins ###
 plugins:
   - jemoji
+  - jekyll-octicons
+  - jekyll-github-metadata
 
 
 ### Navbar Settings ###

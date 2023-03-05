@@ -11,4 +11,5 @@ description: With this repository our "Energy Storage" master's course now offer
              successful career in Energy Engineering.
 external_url: https://github.com/paolodeangelis/Energy_storage
 style: base
+github_repo: Energy_storage
 ---

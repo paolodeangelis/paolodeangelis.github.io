@@ -34,6 +34,48 @@
         <small class="text-muted"> Grant agreement No {{ project_grant_number }} <img style='vertical-align:middle; height: 22px;' src='../img/EUflag.jpg'></small>
       </div>
       {%- endif -%}
+
+      {%- if project_github_repo -%}
+      {% for repository in site.github.public_repositories  %}
+      {%- if repository.name == project_github_repo -%}
+    <!-- {{ repository.name }} -->
+    <!-- <div id="{{ project_id }}-repo" class="card-text" style="text-align: right;"> -->
+        <div class="d-flex f3 align-self-baseline justify-content-end text-muted"  style="text-align: right;">
+        <!-- <p id="{{ project_id }}-repo" > -->
+          {% if repository.language %}
+          <div class="ml-3" style="vertical-align: bottom; font-size: medium;">
+              <!-- <span class="repo-language-color ml-0 mr-1"" style="background-color:{{ site.data.colors[repository.language]["color"] }}"></span> -->
+              <span style="color: {{ site.data.colors[repository.language]["color"] }}">
+              <svg class="svg-icon-fw"><use xlink:href="#icon-point"></use></svg>
+            </span>
+              <span itemprop="programmingLanguage"> {{ repository.language }}</span>
+          </div>
+          {% endif %}
+          {% if repository.stargazers_count %}
+          <div class="ml-3" >
+          <span class="d-inline-block" style="vertical-align: bottom; font-size: medium;">
+            <!-- <a href="{{ repository.html_url }}/stargazers" class="link-gray mr-4"> -->
+              <svg class="octicon octicon-star svg-icon-fw"><use xlink:href="#icon-stars"></use></svg> {{ repository.stargazers_count }}
+            <!-- </a> -->
+          </span>
+         </div>
+          {% endif %}
+          {% if repository.forks_count %}
+          <div class="ml-3">
+          <span class="d-inline-block" style="vertical-align: bottom; font-size: medium;">
+            <!-- <a href="{{ repository.html_url }}/network/members"> -->
+              <svg class="octicon octicon-git-branch svg-icon-fw"><use xlink:href="#icon-forks"></use></svg> {{ repository.forks_count }}
+            <!-- </a> -->
+          </span>
+        </div>
+          {% endif %}
+        <!-- </p> -->
+        <!-- </div> -->
+      </div>
+        {%- endif -%}
+        {% endfor %}
+      {%- endif -%}
+
     </div>
   </a>
 </div>

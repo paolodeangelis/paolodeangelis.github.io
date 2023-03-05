@@ -1,6 +1,11 @@
 
 <div class="card-columns m-3 mt-5">
 
+
+<!-- {% for repository in site.github.public_repositories  | limit: site.projects.limit %}
+  {{ repository.name }}
+{% endfor %} -->
+
   <!-- Remote Projects -->
   {% for remote_project in page.remote_projects %}
 
@@ -48,6 +53,7 @@
     {%- assign project_keywords = project.keywords -%}
     {%- assign project_style = project.style -%}
     {%- assign project_grant_number = project.grant_number -%}
+    {%- assign project_github_repo = project.github_repo -%}
 
     {%- if project.external_url -%}
       {%- assign project_url = project.external_url -%}

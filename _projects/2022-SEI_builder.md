@@ -7,4 +7,5 @@ description: This app is an ASE-base workflow used to reproduce a rational initi
              stochastically placing the crystal grains of the inorganic salts formed during the SEI's reaction.
 external_url: https://github.com/paolodeangelis/SEI_builder
 style: base
+github_repo: SEI_builder
 ---
