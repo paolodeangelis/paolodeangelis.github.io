@@ -30,25 +30,64 @@
   }
 }
 
-[data-theme="dark"] {
-.project.cart-eu{
-  // color: #002066;
-  border-radius: calc($rounded-borders + 4px);
-  border-color: #002066;
-  border-width: 4px;
-  background-color: #002066 !important;
-}
+.project.cart-eu .card-img-top {
+  border-top-left-radius: calc(#{$rounded-borders} - 4px);
+  border-top-right-radius: calc(#{$rounded-borders} - 4px);
+  max-height: 350px;
+  object-fit: cover;
 }
 
-[data-theme="light"] {
+
+[data-theme="dark"] {
   .project.cart-eu{
-  // color: #395fb2;
-  border-radius: calc($rounded-borders + 4px);
-  border-color: #00309a;
-  border-width: 4px;
-  background-color: #f6f8ff !important;
+    // color: #002066;
+    border-radius: calc($rounded-borders + 4px);
+    border-color: #002066;
+    border-width: 4px;
+    background-color: #002066aa !important;
   }
-}
+  }
+
+  [data-theme="light"] {
+    .project.cart-eu{
+    // color: #395fb2;
+    border-radius: calc($rounded-borders + 4px);
+    border-color: #00309a;
+    border-width: 4px;
+    background-color: #00309a11 !important;
+    }
+  }
+
+
+  .project.cart-gnome .card-img-top {
+    border-top-left-radius: calc(#{$rounded-borders} - 2px);
+    border-top-right-radius: calc(#{$rounded-borders} - 2px);
+    max-height: 350px;
+    object-fit: cover;
+  }
+
+
+
+
+[data-theme="dark"] {
+  .project.cart-gnome{
+    // color: #002066;
+    // border-radius: calc($rounded-borders - 0px);
+    border-color: #64c4d3;
+    border-width: 2px;
+    background-color: #64c4d330 !important;
+  }
+  }
+
+  [data-theme="light"] {
+    .project.cart-gnome{
+    // color: #395fb2;
+    // border-radius: calc($rounded-borders - 0px);
+    border-color: #64c4d3;
+    border-width: 2px;
+    background-color: #64c4d311 !important;
+    }
+  }
 
 // If a user adds a custom font, this component will stop it from bleeding into GitHub components:
 .github-component {

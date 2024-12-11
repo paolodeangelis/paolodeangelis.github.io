@@ -31,12 +31,12 @@
   }
 
 
-[data-theme="dark"] .down-arrow:after {     
+[data-theme="dark"] .down-arrow:after {
     border-bottom: 4px solid #ffffff;
     border-right: 4px solid #ffffff;
 }
 
-[data-theme="light"]  .down-arrow:after {     
+[data-theme="light"]  .down-arrow:after {
     border-bottom: 4px solid #17191a;
     border-right: 4px solid #17191a;
 }
