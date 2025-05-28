@@ -23,6 +23,7 @@ group :jekyll_plugins do
   gem "jekyll-timeago", "~> 0.15"
   gem "jekyll-github-metadata"
   gem "jekyll-octicons"
+  gem "jekyll-sitemap"
   gem "jemoji"
 end
 

@@ -12,6 +12,7 @@ open_new_tab        : false                             # Opens external URLs in
 plugins:
   - jemoji
   - jekyll-octicons
+  - jekyll-sitemap
   - jekyll-github-metadata
 
 
@@ -20,6 +21,7 @@ nav_exclude:                                            # The following paths ar
   - pages/tags.html
   - pages/404.html
   - pages/index.md
+  - blog/welcome-to-jekyll*
   - documentation/partials/**                           # For Documentation Only
 
 
@@ -73,9 +75,9 @@ disqus:
 
 ### Analytics ###
 analytics:
-  enabled: false                                        # Set true to enable analytics
+  enabled: true                                        # Set true to enable analytics
   google:
-    tracking_id: your-google-tracking-id
+    tracking_id: G-2HMTESQTG1
 
 
 ### Buy me a coffee ###

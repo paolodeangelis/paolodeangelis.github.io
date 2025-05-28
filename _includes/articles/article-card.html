@@ -1,55 +1,58 @@
 <link src="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
 
-<div class="wow animated fadeIn" data-wow-delay=".15s">
-  <a href="{{ article_url }}" class="article card text-themed" target="_blank" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
-    {%- if article_img -%}
-    <img id="{{ article_id }}-img" class="card-img-top" src="{{ article_img }}" alt="{{ article_title }}" />
-    {%- endif -%}
-    <div class="card-body">
-      <p id="{{ article_id }}-author" class="card-text">
-        <h5>
-          {{ article_author }}
-        </h5>
-      </p>
-      <h4 id="{{ article_id }}-title" class="card-title">
-        <strong> {{ article_title }} </strong>
-      </h4>
-      <p id="{{ article_id }}-journal" class="card-text">
-        <i>{{ article_journal }}</i>
-        {% if article_volume %}
-        {{ article_volume }},
-        {% endif %}
-        {% if article_number %}
-        no. {{ article_number }},
-        {% endif %}
-        {% if article_year %}
-        ({{ article_year }})
-        {% endif %}
-        {% if article_pages %}
-        : {{ article_pages }}
-        {% endif %}
-        .
-      </p>
+<div class="wow animated fadeIn article-item" data-wow-delay=".15s"
+     data-title="{{ article.title | downcase }}"
+     data-author="{{ article.author | downcase }}"
+     data-year="{{ article.year | downcase }}"
+     data-journal="{{ article.journal | downcase }}" 
+     data-abstract="{{ article.abstract | downcase }}" 
+     >
+    <a href="{{ article_url }}" class="article card text-themed" target="_blank"
+       {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
+        {%- if article_img -%}
+        <img id="{{ article_id }}-img" class="card-img-top article-image" src="{{ article_img }}"
+             alt="{{ article_title }}" loading="lazy" decoding="async" />
+        {%- endif -%}
+        <div class="card-body">
+            <p id="{{ article_id }}-author" class="card-text article-author">
+                    {{ article_author }}
+            </p>
+            <h4 id="{{ article_id }}-title" class="card-title article-title">
+                <strong> {{ article_title }} </strong>
+            </h4>
+            <p id="{{ article_id }}-journal" class="card-text article-journal">
+                <i>{{ article_journal }}</i>
+                {% if article_volume %}
+                {{ article_volume }},
+                {% endif %}
+                {% if article_number %}
+                no. {{ article_number }},
+                {% endif %}
+                {% if article_year %}
+                ({{ article_year }})
+                {% endif %}
+                {% if article_pages %}
+                : {{ article_pages }}
+                {% endif %}
+                .
+            </p>
 
-      <div id="{{ article_id }}-abstract" class="abstract_box center mt-0 mb-4">
-        <div
-          class="abstract_box center"
-          style="text-align: center;"
-          title="{{ article_abstract }}"
-        >
-          Abstract <i class="far fa fa-info-circle"></i>
+            <div id="{{ article_id }}-abstract" class="abstract_box center mt-0 mb-4 article-abstract">
+                <div class="abstract_box center" style="text-align: center;" title="{{ article_abstract }}">
+                    Abstract <i class="far fa fa-info-circle"></i>
+                </div>
+            </div>
+
+            <p id="{{ article_id }}-keywords" class="card-text article-keywords">
+                {%- for keyword in article_keywords -%}
+                <span class="badge badge-pill badge-keywords ml-1">{{ keyword }}</span>
+                {%- endfor -%}
+            </p>
+
+            <div id="{{ article_id }}-year" class="card-text article-year" style="text-align: right;">
+                <small class="text-muted"> Publication Date {{ article_day }}/{{ article_month }}/{{ article_year }}
+                </small>
+            </div>
         </div>
-      </div>
-
-      <p id="{{ article_id }}-keywords" class="card-text">
-        {%- for keyword in article_keywords -%}
-        <span class="badge badge-pill badge-keywords ml-1">{{ keyword }}</span>
-        {%- endfor -%}
-      </p>
-
-      <div id="{{ article_id }}-year" class="card-text" style="text-align: right;">
-        <small class="text-muted"> Publication Date {{ article_day }}/{{ article_month }}/{{ article_year }} </small>
-      </div>
-    </div>
-  </a>
+    </a>
 </div>

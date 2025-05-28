@@ -1,30 +1,51 @@
-<div class="card-columns m-3 mt-5">
+<div class="container-fluid mt-4">
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-auto mb-2 mb-md-0">
+            <div class="btn-group" role="group" aria-label="View Toggle">
+                <button type="button" class="btn btn-outline-primary active" id="card-view-btn">
+                    <i class="fas fa-th-large"></i> Card View
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="list-view-btn">
+                    <i class="fas fa-list"></i> List View
+                </button>
+            </div>
+        </div>
+        <div class="col-md mb-2 mb-md-0">
+            <input type="text" id="article-search" class="form-control" placeholder="Search articles...">
+        </div>
+        <div class="col-md-auto">
+            <select id="article-sort" class="form-control">
+                <option value="year-desc">Sort by Year (Newest)</option>
+                <option value="year-asc">Sort by Year (Oldest)</option>
+                <option value="author-asc">Sort by Author (A-Z)</option>
+                <option value="title-asc">Sort by Title (A-Z)</option>
+            </select>
+        </div>
+    </div>
 
-{% assign article_sorted = site.articles  | sort: 'year' %}
+    <div id="articles-container" class="articles-grid card-columns m-3 mt-5">
+        {% assign article_sorted = site.articles | sort: 'year' %}
 
-{% for article in article_sorted reversed %}
-{%- assign article_id    = article.title | slugify -%}
-{%- assign article_img   = article.image -%}
-{%- assign article_author  = article.author -%}
-{%- assign article_title = article.title -%}
-<!-- {%- assign article_desc  = article.description -%} -->
-{%- assign article_keywords = article.keywords -%}
-{%- assign article_year = article.year -%}
-{%- assign article_month = article.month -%}
-{%- assign article_day = article.day -%}
-{%- assign article_journal = article.journal -%}
-{%- assign article_volume = article.volume -%}
-{%- assign article_number = article.number -%}
-{%- assign article_pages = article.pages -%}
-{%- assign article_abstract = article.abstract -%}
+        {% for article in article_sorted reversed %}
+        {%- assign article_id = article.title | slugify -%}
+        {%- assign article_img = article.image -%}
+        {%- assign article_author = article.author -%}
+        {%- assign article_title = article.title -%}
+        {%- assign article_keywords = article.keywords -%}
+        {%- assign article_year = article.year -%}
+        {%- assign article_month = article.month -%}
+        {%- assign article_day = article.day -%}
+        {%- assign article_journal = article.journal -%}
+        {%- assign article_volume = article.volume -%}
+        {%- assign article_number = article.number -%}
+        {%- assign article_pages = article.pages -%}
+        {%- assign article_abstract = article.abstract -%}
 
-<!-- {%- assign article_url = article.url | relative_url -%}
-{%- assign external    = false -%} -->
-{%- assign article_url = article.doi -%}
-{%- assign external    = true -%}
+        {%- assign article_url = article.doi -%}
+        {%- assign external = true -%}
 
-{% include articles/article-card.html %}
+        {% include articles/article-card.html %}
 
-{% endfor %}
-
+        {% endfor %}
+    </div>
 </div>
