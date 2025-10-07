@@ -15,11 +15,11 @@
   color: 027f81
 
 - name: C
-  percentage: 65
+  percentage: 75
   color: 4d57ff
 
 - name: C++
-  percentage: 60
+  percentage: 70
   color: 014380
 
 - name: Fortran
