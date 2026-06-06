@@ -121,4 +121,6 @@ exclude:
   - README.md
   - CONTRIBUTING.md
   - LICENSE
+  - TODO.md
+  - scripts
   - "*.log"

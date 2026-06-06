@@ -1,5 +1,7 @@
-
-  MathJax.Hub.Config({
+if (!window.MathJax || !window.MathJax.Hub) {
+  window.MathJax = window.MathJax || {};
+} else {
+  window.MathJax.Hub.Config({
     tex2jax: {
       inlineMath: [['$','$'], ['\\(','\\)']],
       displayMath: [['$$','$$'], ['\\[','\\]']],
@@ -7,6 +9,7 @@
     }
   });
 
-  MathJax.Hub.Queue(function () {
-    var mathjax = MathJax.Hub.getAllJax();
+  window.MathJax.Hub.Queue(function () {
+    window.MathJax.Hub.getAllJax();
   });
+}
