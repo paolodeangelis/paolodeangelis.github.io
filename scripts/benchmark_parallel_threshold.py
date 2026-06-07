@@ -81,6 +81,10 @@ function buildTables() {
   const pairSigma = new Float32Array(typeCount * typeCount);
   const pairEpsilon = new Float32Array(typeCount * typeCount);
   const pairMode = new Int8Array(typeCount * typeCount);
+  const pairSigma2 = new Float32Array(typeCount * typeCount);
+  const pairCutoff2 = new Float32Array(typeCount * typeCount);
+  const pairCoeff = new Float32Array(typeCount * typeCount);
+  let maxPairCutoff = 0;
 
   for (let i = 0; i < typeCount; i += 1) {
     typeSigma[i] = types[i].sigmaAngstrom;
@@ -96,10 +100,14 @@ function buildTables() {
       pairSigma[p] = r0Override == null ? (sigmaOverride == null ? 0.5 * (typeSigma[a] + typeSigma[b]) : sigmaOverride) : r0Override / SQRT2_1_6;
       pairEpsilon[p] = epsilonOverride == null ? Math.sqrt(typeEpsilon[a] * typeEpsilon[b]) : epsilonOverride;
       pairMode[p] = config.pairMode && config.pairMode[a] && config.pairMode[a][b] === "repulsive" ? 1 : 0;
+      pairSigma2[p] = pairSigma[p] * pairSigma[p];
+      pairCutoff2[p] = pairMode[p] === 1 ? 1.2599210498948732 * pairSigma2[p] : 6.25 * pairSigma2[p];
+      pairCoeff[p] = 24 * pairEpsilon[p] / pairSigma2[p];
+      maxPairCutoff = Math.max(maxPairCutoff, Math.sqrt(pairCutoff2[p]));
     }
   }
 
-  return { typeSigma, typeEpsilon, pairSigma, pairEpsilon, pairMode, typeCount };
+  return { typeSigma, typeEpsilon, pairSigma, pairEpsilon, pairMode, pairSigma2, pairCutoff2, pairCoeff, maxPairCutoff, typeCount };
 }
 
 function makeSnapshot(n) {
@@ -138,6 +146,10 @@ function makeSnapshot(n) {
     pairSigma: tables.pairSigma,
     pairEpsilon: tables.pairEpsilon,
     pairMode: tables.pairMode,
+    pairSigma2: tables.pairSigma2,
+    pairCutoff2: tables.pairCutoff2,
+    pairCoeff: tables.pairCoeff,
+    maxPairCutoff: tables.maxPairCutoff,
     boxWidth: width,
     boxHeight: height,
     mouseActive: true,
@@ -191,49 +203,93 @@ function cloneTask(base, start, end) {
   };
 }
 
-function computeSerial(base) {
+function computeSerial(base, cache) {
   const forces = new Float32Array(base.n * 2);
-  let virial = 0;
+  const cellSize = Math.max(1e-9, base.maxPairCutoff);
+  const cols = Math.max(1, Math.ceil(base.boxWidth / cellSize));
+  const rows = Math.max(1, Math.ceil(base.boxHeight / cellSize));
+  const cellCount = cols * rows;
+  let sink = 0;
+
+  if (!cache.heads || cache.cellCapacity < cellCount) {
+    cache.heads = new Int32Array(cellCount);
+    cache.cellCapacity = cellCount;
+  }
+
+  if (!cache.next || cache.particleCapacity < base.n) {
+    cache.next = new Int32Array(base.n);
+    cache.particleCapacity = base.n;
+  }
+
+  const heads = cache.heads;
+  const next = cache.next;
+
+  heads.fill(-1, 0, cellCount);
 
   for (let i = 0; i < base.n; i += 1) {
-    const ix = base.positions[2 * i];
-    const iy = base.positions[2 * i + 1];
-    const typeI = base.typeIds[i];
+    const cx = Math.max(0, Math.min(cols - 1, Math.floor(base.positions[2 * i] / cellSize)));
+    const cy = Math.max(0, Math.min(rows - 1, Math.floor(base.positions[2 * i + 1] / cellSize)));
+    const cell = cy * cols + cx;
+    next[i] = heads[cell];
+    heads[cell] = i;
+  }
 
-    for (let j = i + 1; j < base.n; j += 1) {
-      const dx = ix - base.positions[2 * j];
-      const dy = iy - base.positions[2 * j + 1];
-      let r2 = dx * dx + dy * dy;
-      const pair = typeI * base.typeCount + base.typeIds[j];
-      const sigma = base.pairSigma[pair];
-      const sigma2 = sigma * sigma;
-      const cutoff2 = base.pairMode[pair] === 1 ? 1.2599210498948732 * sigma2 : 6.25 * sigma2;
+  function addPair(i, j) {
+    const dx = base.positions[2 * i] - base.positions[2 * j];
+    const dy = base.positions[2 * i + 1] - base.positions[2 * j + 1];
+    let r2 = dx * dx + dy * dy;
+    const pair = base.typeIds[i] * base.typeCount + base.typeIds[j];
+    const sigma2 = base.pairSigma2[pair];
 
-      if (r2 >= cutoff2) continue;
+    if (r2 >= base.pairCutoff2[pair]) return;
 
-      r2 = Math.max(r2, 0.4225 * sigma2);
-      const invU = sigma2 / r2;
-      const invU3 = invU * invU * invU;
-      const invU6 = invU3 * invU3;
-      const scalar = 24 * base.pairEpsilon[pair] * (2 * invU6 - invU3) * invU / sigma2;
-      const fx = scalar * dx;
-      const fy = scalar * dy;
-      forces[2 * i] += fx;
-      forces[2 * i + 1] += fy;
-      forces[2 * j] -= fx;
-      forces[2 * j + 1] -= fy;
-      virial += dx * fx + dy * fy;
+    r2 = Math.max(r2, 0.4225 * sigma2);
+    const invU = sigma2 / r2;
+    const invU3 = invU * invU * invU;
+    const invU6 = invU3 * invU3;
+    const scalar = base.pairCoeff[pair] * (2 * invU6 - invU3) * invU;
+    const fx = scalar * dx;
+    const fy = scalar * dy;
+    forces[2 * i] += fx;
+    forces[2 * i + 1] += fy;
+    forces[2 * j] -= fx;
+    forces[2 * j + 1] -= fy;
+    sink += fx + fy;
+  }
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const baseCell = row * cols + col;
+
+      for (let a = heads[baseCell]; a !== -1; a = next[a]) {
+        for (let b = next[a]; b !== -1; b = next[b]) addPair(a, b);
+      }
+
+      for (let oy = 0; oy <= 1; oy += 1) {
+        for (let ox = -1; ox <= 1; ox += 1) {
+          if (oy === 0 && ox <= 0) continue;
+          const nx = col + ox;
+          const ny = row + oy;
+          if (nx < 0 || nx >= cols || ny >= rows) continue;
+          const otherCell = ny * cols + nx;
+
+          for (let c = heads[baseCell]; c !== -1; c = next[c]) {
+            for (let d = heads[otherCell]; d !== -1; d = next[d]) addPair(c, d);
+          }
+        }
+      }
     }
   }
 
-  return virial + forces[0];
+  return sink + forces[0];
 }
 
 async function runSerial(base, iterations) {
-  computeSerial(base);
+  const cache = {};
+  computeSerial(base, cache);
   const t0 = performance.now();
   let sink = 0;
-  for (let i = 0; i < iterations; i += 1) sink += computeSerial(base);
+  for (let i = 0; i < iterations; i += 1) sink += computeSerial(base, cache);
   const t1 = performance.now();
   return { mode: "serial", workerCount: 0, particleCount: base.n, iterations, msPerForce: (t1 - t0) / iterations, sink };
 }

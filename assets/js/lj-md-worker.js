@@ -1,10 +1,11 @@
 var LJ_MD_PARTICLE_COUNT = 440;
 var LJ_MD_CLICK_ADD_PARTICLE_COUNT = 10;
 var LJ_MD_MAX_PARTICLE_COUNT = 1200;
-var LJ_MD_PARALLEL_THRESHOLD = 1000;
+var LJ_MD_PARALLEL_THRESHOLD = 2000;
 var LJ_MD_WORKER_COUNT = 4;
 var LJ_MD_FORCE_MODE = "auto"; // "auto", "serial", or "parallel"
 var LJ_MD_PARALLEL_FORCE_BACKEND = "optimized"; // "exact", "optimized", or "approx"; only used by parallel force mode.
+var LJ_MD_SERIAL_USE_CELL_LIST = true;
 var LJ_MD_APPROX_FORCE_TABLE_BITS = 9; // 2^9 = 512 samples per type pair.
 var LJ_MD_INITIAL_TEMPERATURE_K = 300;
 var LJ_MD_TIME_STEP_PS = 0.0025;
@@ -198,6 +199,10 @@ function buildTypeTables(sim) {
   sim.pairSigma = new Float32Array(typeCount * typeCount);
   sim.pairEpsilon = new Float32Array(typeCount * typeCount);
   sim.pairMode = new Int8Array(typeCount * typeCount);
+  sim.pairSigma2 = new Float32Array(typeCount * typeCount);
+  sim.pairCutoff2 = new Float32Array(typeCount * typeCount);
+  sim.pairCoeff = new Float32Array(typeCount * typeCount);
+  sim.maxPairCutoff = 0;
 
   for (var i = 0; i < typeCount; i += 1) {
     var type = LJ_MD_PARTICLE_TYPES[i];
@@ -229,6 +234,12 @@ function buildTypeTables(sim) {
         Math.sqrt(sim.typeEpsilon[a] * sim.typeEpsilon[b]) :
         epsilonOverride;
       sim.pairMode[p] = LJ_MD_PAIR_MODE && LJ_MD_PAIR_MODE[a][b] === "repulsive" ? 1 : 0;
+      sim.pairSigma2[p] = sim.pairSigma[p] * sim.pairSigma[p];
+      sim.pairCutoff2[p] = sim.pairMode[p] === 1 ?
+        1.2599210498948732 * sim.pairSigma2[p] :
+        6.25 * sim.pairSigma2[p];
+      sim.pairCoeff[p] = 24 * sim.pairEpsilon[p] / sim.pairSigma2[p];
+      sim.maxPairCutoff = Math.max(sim.maxPairCutoff, Math.sqrt(sim.pairCutoff2[p]));
     }
   }
 }
@@ -372,6 +383,10 @@ function createState(width, height) {
     totalEnergyEv: 0,
     needPressure: false,
     needEnergy: false,
+    cellHeads: null,
+    cellNext: null,
+    cellCapacity: 0,
+    cellParticleCapacity: 0,
     colorMinEv: -KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K * Math.log(1 - LJ_MD_COLOR_PERCENTILE_LOW),
     colorMaxEv: -KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K * Math.log(1 - LJ_MD_COLOR_PERCENTILE_HIGH),
     mouseActive: false,
@@ -506,6 +521,11 @@ function capTotalForces(sim) {
 }
 
 function computeForcesSerial(sim) {
+  if (LJ_MD_SERIAL_USE_CELL_LIST && sim.maxPairCutoff > 0) {
+    computeForcesSerialCellList(sim);
+    return;
+  }
+
   var positions = sim.positions;
   var forces = sim.forces;
   var virial = 0;
@@ -522,20 +542,18 @@ function computeForcesSerial(sim) {
       var dy = iy - positions[2 * j + 1];
       var r2 = dx * dx + dy * dy;
       var p = pairIndex(sim, i, j);
-      var sigma = sim.pairSigma[p];
-      var epsilon = sim.pairEpsilon[p];
-      var cutoff = sim.pairMode[p] === 1 ? Math.pow(2, 1 / 6) * sigma : 2.5 * sigma;
+      var sigma2 = sim.pairSigma2[p];
 
-      if (r2 >= cutoff * cutoff) {
+      if (r2 >= sim.pairCutoff2[p]) {
         continue;
       }
 
-      r2 = Math.max(r2, 0.4225 * sigma * sigma);
+      r2 = Math.max(r2, 0.4225 * sigma2);
 
-      var invR2 = sigma * sigma / r2;
-      var invR6 = invR2 * invR2 * invR2;
-      var invR12 = invR6 * invR6;
-      var scalar = 24 * epsilon * (2 * invR12 - invR6) / r2;
+      var invU = sigma2 / r2;
+      var invU3 = invU * invU * invU;
+      var invU6 = invU3 * invU3;
+      var scalar = sim.pairCoeff[p] * (2 * invU6 - invU3) * invU;
       var fx = scalar * dx;
       var fy = scalar * dy;
 
@@ -549,7 +567,7 @@ function computeForcesSerial(sim) {
       }
 
       if (sim.needEnergy) {
-        potential += 4 * epsilon * (invR12 - invR6);
+        potential += 4 * sim.pairEpsilon[p] * (invU6 - invU3);
       }
     }
 
@@ -563,6 +581,127 @@ function computeForcesSerial(sim) {
   capTotalForces(sim);
   sim.virialEv = sim.needPressure ? virial : 0;
   sim.potentialEnergyEv = sim.needEnergy ? potential : 0;
+}
+
+function addPairForce(sim, i, j, positions, forces, accum) {
+  var dx = positions[2 * i] - positions[2 * j];
+  var dy = positions[2 * i + 1] - positions[2 * j + 1];
+  var r2 = dx * dx + dy * dy;
+  var p = pairIndex(sim, i, j);
+  var sigma2 = sim.pairSigma2[p];
+
+  if (r2 >= sim.pairCutoff2[p]) {
+    return;
+  }
+
+  r2 = Math.max(r2, 0.4225 * sigma2);
+
+  var invU = sigma2 / r2;
+  var invU3 = invU * invU * invU;
+  var invU6 = invU3 * invU3;
+  var scalar = sim.pairCoeff[p] * (2 * invU6 - invU3) * invU;
+  var fx = scalar * dx;
+  var fy = scalar * dy;
+
+  forces[2 * i] += fx;
+  forces[2 * i + 1] += fy;
+  forces[2 * j] -= fx;
+  forces[2 * j + 1] -= fy;
+
+  if (sim.needPressure) {
+    accum.virial += dx * fx + dy * fy;
+  }
+
+  if (sim.needEnergy) {
+    accum.potential += 4 * sim.pairEpsilon[p] * (invU6 - invU3);
+  }
+}
+
+function computeForcesSerialCellList(sim) {
+  var positions = sim.positions;
+  var forces = sim.forces;
+  var cellSize = Math.max(1e-9, sim.maxPairCutoff);
+  var cols = Math.max(1, Math.ceil(sim.boxWidth / cellSize));
+  var rows = Math.max(1, Math.ceil(sim.boxHeight / cellSize));
+  var cellCount = cols * rows;
+  var heads;
+  var next;
+  var accum = {
+    virial: 0,
+    potential: 0
+  };
+
+  if (!sim.cellHeads || sim.cellCapacity < cellCount) {
+    sim.cellHeads = new Int32Array(cellCount);
+    sim.cellCapacity = cellCount;
+  }
+
+  if (!sim.cellNext || sim.cellParticleCapacity < sim.n) {
+    sim.cellNext = new Int32Array(sim.n);
+    sim.cellParticleCapacity = sim.n;
+  }
+
+  heads = sim.cellHeads;
+  next = sim.cellNext;
+
+  forces.fill(0);
+  heads.fill(-1, 0, cellCount);
+
+  for (var i = 0; i < sim.n; i += 1) {
+    var x = positions[2 * i];
+    var y = positions[2 * i + 1];
+    var cx = Math.max(0, Math.min(cols - 1, Math.floor(x / cellSize)));
+    var cy = Math.max(0, Math.min(rows - 1, Math.floor(y / cellSize)));
+    var cell = cy * cols + cx;
+
+    next[i] = heads[cell];
+    heads[cell] = i;
+
+    addWallForceTo(forces, sim, i, x, 1, 0);
+    addWallForceTo(forces, sim, i, sim.boxWidth - x, -1, 0);
+    addWallForceTo(forces, sim, i, y, 1, 1);
+    addWallForceTo(forces, sim, i, sim.boxHeight - y, -1, 1);
+    addMouseWallForceTo(forces, sim, i, x, y);
+  }
+
+  for (var row = 0; row < rows; row += 1) {
+    for (var col = 0; col < cols; col += 1) {
+      var baseCell = row * cols + col;
+
+      for (var a = heads[baseCell]; a !== -1; a = next[a]) {
+        for (var b = next[a]; b !== -1; b = next[b]) {
+          addPairForce(sim, a, b, positions, forces, accum);
+        }
+      }
+
+      for (var oy = 0; oy <= 1; oy += 1) {
+        for (var ox = -1; ox <= 1; ox += 1) {
+          if (oy === 0 && ox <= 0) {
+            continue;
+          }
+
+          var nx = col + ox;
+          var ny = row + oy;
+
+          if (nx < 0 || nx >= cols || ny >= rows) {
+            continue;
+          }
+
+          var otherCell = ny * cols + nx;
+
+          for (var c = heads[baseCell]; c !== -1; c = next[c]) {
+            for (var d = heads[otherCell]; d !== -1; d = next[d]) {
+              addPairForce(sim, c, d, positions, forces, accum);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  capTotalForces(sim);
+  sim.virialEv = sim.needPressure ? accum.virial : 0;
+  sim.potentialEnergyEv = sim.needEnergy ? accum.potential : 0;
 }
 
 function computeForcesParallel(sim, done) {
