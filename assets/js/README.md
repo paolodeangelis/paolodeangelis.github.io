@@ -133,4 +133,3 @@ LJ_MD_MAX_PARTICLE_KINETIC_DELTA_K
 ```
 
 Then reduce aggressive `epsilonEv` values or increase problematic `sigmaAngstrom` values.
-

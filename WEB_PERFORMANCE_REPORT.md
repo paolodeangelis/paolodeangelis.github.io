@@ -115,4 +115,3 @@ Generated from the current repository state.
 5. Self-host or remove Font Awesome CDN dependency.
 6. Add `defer` to `articles.js`.
 7. Add a mobile cap for LJ MD particle count or reduce FPS/steps on small screens.
-

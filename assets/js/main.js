@@ -388,7 +388,7 @@ function startLJAnimation() {
     descriptionReadout.textContent = [
       "LJ MD controls",
       "--------------------------------",
-      "h  toggle help",     
+      "h  toggle help",
       "+  increase T",
       "-  decrease T",
       "t  toggle temperature",
@@ -397,7 +397,7 @@ function startLJAnimation() {
       "n  toggle particle count",
       "g  toggle graph HUD",
       "left click  add atoms",
-      "right click mouse repel/attract"      
+      "right click mouse repel/attract"
     ].join("\n");
   }
 

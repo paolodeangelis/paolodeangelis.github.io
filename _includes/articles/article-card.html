@@ -2,8 +2,8 @@
      data-title="{{ article.title | downcase }}"
      data-author="{{ article.author | downcase }}"
      data-year="{{ article.year | downcase }}"
-     data-journal="{{ article.journal | downcase }}" 
-     data-abstract="{{ article.abstract | downcase }}" 
+     data-journal="{{ article.journal | downcase }}"
+     data-abstract="{{ article.abstract | downcase }}"
      >
     <a href="{{ article_url }}" class="article card text-themed" target="_blank"
        {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>

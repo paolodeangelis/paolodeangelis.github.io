@@ -2,12 +2,12 @@
 title: "Energy-GNoME: A Living Database of Selected Materials for Energy Applications"
 author: <strong>Paolo De Angelis</strong>, Umberto Raucci, Francesco Mambretti, Matteo Fasano, Eliodoro Chiavazzo, Pietro Asinari, Michele Parrinello1
 journal: ChemrXiv
-volume: 
+volume:
 number:
-pages: 
+pages:
 year: 2025
 month: 10
-day: 
+day:
 keywords: [LiF, Lithium-ion Batteries, Solid Electrolyte Interphase, Knock-off Diffusion, Ring Diffusion, Machine Learning based Interatomic Potential]
 image: ../img/2025-img_article_LiF_chemarxiv.png
 doi: https://doi.org/10.26434/chemrxiv-2025-fv0zl
