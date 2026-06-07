@@ -9,9 +9,9 @@ var LJ_MD_SERIAL_USE_CELL_LIST = true;
 var LJ_MD_APPROX_FORCE_TABLE_BITS = 9; // 2^9 = 512 samples per type pair.
 var LJ_MD_INITIAL_TEMPERATURE_K = 300;
 var LJ_MD_TIME_STEP_PS = 0.0025;
-var LJ_MD_STEPS_PER_FRAME = 6;
-var LJ_MD_TARGET_FPS = 24;
-var LJ_MD_DENSITY_2D = 0.05;
+var LJ_MD_STEPS_PER_FRAME = 5;
+var LJ_MD_TARGET_FPS = 20;
+var LJ_MD_DENSITY_2D = 0.09;
 var LJ_MD_THERMOSTAT_ENABLED = true;
 var LJ_MD_THERMOSTAT_TAU_STEPS = 200;
 var LJ_MD_THERMOSTAT_CHI_SQUARE_MODE = "approx"; // "approx" is faster; "exact" samples dof - 1 Gaussians.
@@ -30,10 +30,10 @@ var LJ_MD_WALL_SIGMA_SCALE = 0.75;
 var LJ_MD_WALL_APPEARANCE_DISTANCE_ANGSTROM = 0.0; // 0 uses 2^(1/6) * wall sigma.
 var LJ_MD_WALL_MAX_FORCE_EV_PER_A = 50.0;
 var LJ_MD_MOUSE_WALL_ENABLED = true;
-var LJ_MD_MOUSE_WALL_RADIUS_ANGSTROM = 1.0;
-var LJ_MD_MOUSE_WALL_SOFTNESS_ANGSTROM = 2.0;
-var LJ_MD_MOUSE_WALL_EPSILON_EV = 0.5;
-var LJ_MD_MOUSE_WALL_MAX_FORCE_EV_PER_A = 50.0;
+var LJ_MD_MOUSE_WALL_RADIUS_ANGSTROM = 1.5;
+var LJ_MD_MOUSE_WALL_SOFTNESS_ANGSTROM = 6.0;
+var LJ_MD_MOUSE_WALL_EPSILON_EV = 0.9;
+var LJ_MD_MOUSE_WALL_MAX_FORCE_EV_PER_A = 100.0;
 var LJ_MD_MOUSE_WALL_INITIAL_MODE = "repulsive"; // "repulsive" or "attractive".
 var LJ_MD_PARTICLE_TYPES = [
   {
@@ -42,31 +42,31 @@ var LJ_MD_PARTICLE_TYPES = [
     massAmu: 8.0,
     sigmaAngstrom: 0.7,
     epsilonEv: 0.015,
-    radiusPx: 2.0
+    radiusPx: 3.0
   },
   {
     name: "B",
     fraction: 0.10,
     massAmu: 15.0,
-    sigmaAngstrom: 1.2,
-    epsilonEv: 0.10,
-    radiusPx: 6.0
+    sigmaAngstrom: 1.5,
+    epsilonEv: 0.11,
+    radiusPx: 7.0
   },
   {
     name: "C",
     fraction: 0.03,
     massAmu: 40.0,
-    sigmaAngstrom: 1.2,
-    epsilonEv: 0.05,
-    radiusPx: 7.0
+    sigmaAngstrom: 2.0,
+    epsilonEv: 0.03,
+    radiusPx: 8.0
   },
   {
     name: "D",
     fraction: 0.07,
     massAmu: 13.0,
     sigmaAngstrom: 0.7,
-    epsilonEv: 0.1,
-    radiusPx: 3.5
+    epsilonEv: 0.08,
+    radiusPx: 4.0
   }
 ];
 // Pair tables follow the order above: A, B, C. Keep matrices symmetric.
@@ -82,19 +82,19 @@ var LJ_MD_PAIR_SIGMA_ANGSTROM = [
   [null,null,null,null],   // C-A, C-B, C-C
 ];
 var LJ_MD_PAIR_EPSILON_EV = [
-  [null,null,null,null], // A-A, A-B, A-C
-  [null,null,null,null], // B-A, B-B, B-C
-  [null,null,null,null],   // C-A, C-B, C-C
-  [null,null,null,null],   // C-A, C-B, C-C
+  [0.01,0.02,0.02,0.02], // A-A, A-B, A-C
+  [0.02,null,null,null], // B-A, B-B, B-C
+  [0.02,null,null,null],   // C-A, C-B, C-C
+  [0.02,null,null,null],   // C-A, C-B, C-C
 ];
 // "lj" = attractive + repulsive Lennard-Jones.
 // "repulsive" = Weeks-Chandler-Andersen style: only the repulsive branch.
 // Example: make A-B not attractive by setting [0][1] and [1][0] to "repulsive".
 var LJ_MD_PAIR_MODE = [
-  ["lj", "repulsive", "repulsive", "repulsive"],
-  ["repulsive", "lj", "lj", "repulsive"],
-  ["repulsive", "lj", "lj", "repulsive"],
-  ["repulsive", "repulsive", "repulsive", "lj"],
+  ["lj", "lj", "lj", "lj"],
+  ["lj", "lj", "lj", "repulsive"],
+  ["lj", "lj", "lj", "repulsive"],
+  ["lj", "repulsive", "repulsive", "lj"],
 ];
 
 var KB_EV_PER_K = 8.617333262145e-5;

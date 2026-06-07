@@ -79,6 +79,13 @@ analytics:
   google:
     tracking_id: G-2HMTESQTG1
 
+### Optional heavy frontend assets ###
+mathjax:
+  enabled: true                                        # Page front matter can set mathjax: false.
+
+github_buttons:
+  enabled: false                                       # Enable only on pages that render GitHub button widgets.
+
 
 ### Buy me a coffee ###
 # See https://www.buymeacoffee.com/
@@ -119,6 +126,7 @@ exclude:
   - [vendor]
   - vendor
   - README.md
+  - assets/js/README.md
   - CONTRIBUTING.md
   - LICENSE
   - TODO.md

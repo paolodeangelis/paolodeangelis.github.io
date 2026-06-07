@@ -26,8 +26,16 @@
   <link rel="preconnect" href="https://use.fontawesome.com" crossorigin>
 
   <!-- MATH -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM-CHTML"></script>
-  <script defer src="{{ '/assets/js/math.js' | relative_url }}"></script>
+  {%- assign mathjax_enabled = site.mathjax.enabled -%}
+  {%- if page.mathjax == false -%}
+    {%- assign mathjax_enabled = false -%}
+  {%- elsif page.mathjax == true -%}
+    {%- assign mathjax_enabled = true -%}
+  {%- endif -%}
+  {%- if mathjax_enabled != false -%}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM-CHTML"></script>
+    <script defer src="{{ '/assets/js/math.js' | relative_url }}"></script>
+  {%- endif -%}
 
 
   <!-- Theme style -->

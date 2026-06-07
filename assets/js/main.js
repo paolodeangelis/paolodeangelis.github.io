@@ -1,17 +1,17 @@
 var USE_LJ_MD_ANIMATION = true;
 var LJ_MD_RENDER_COLOR_MODE = "type"; // "type" or "kinetic".
 var LJ_MD_PARTICLE_ALPHA_MIN = 0.10;
-var LJ_MD_PARTICLE_ALPHA_MAX = 0.75;
+var LJ_MD_PARTICLE_ALPHA_MAX = 0.70;
 var LJ_MD_SHOW_PRESSURE = false;
 var LJ_MD_SHOW_ENERGY = false;
 var LJ_MD_SHOW_TEMPERATURE = true;
 var LJ_MD_SHOW_PARTICLE_COUNT = true;
-var LJ_MD_GRAPH_HISTORY_LIMIT = 1000;
-var LJ_MD_HUD_BACKGROUND_ALPHA = 0.20;
+var LJ_MD_GRAPH_HISTORY_LIMIT = 100;
+var LJ_MD_HUD_BACKGROUND_ALPHA = 0.60;
 var LJ_MD_HUD_PADDING_PX = 3;
-var LJ_MD_GRAPH_WIDTH_PX = 220;
-var LJ_MD_GRAPH_HEIGHT_PX = 46;
-var LJ_MD_HELP_PROMPT_TEXT = "press h for help";
+var LJ_MD_GRAPH_WIDTH_PX = 250;
+var LJ_MD_GRAPH_HEIGHT_PX = 52;
+var LJ_MD_HELP_PROMPT_TEXT = "LJ MD | press h for help";
 var LJ_MD_TYPE_COLORS_DARK = ["#f8f8f2", "#49eeba", "#e6455d", "#2a67eb", "#f154f7"];
 var LJ_MD_TYPE_COLORS_LIGHT = ["#1a222c", "#22806b", "#c43855", "#134cc5", "#ca27cf"];
 
@@ -386,17 +386,17 @@ function startLJAnimation() {
 
     descriptionReadout.textContent = [
       "LJ MD controls",
-      "h  toggle help",
-      "+  target T +1 K",
-      "-  target T -1 K",
-      "hold +/- 10 K repeat",
-      "left click  add atoms",
-      "right click mouse repel/attract",
+      "--------------------------------",
+      "h  toggle help",     
+      "+  increase T",
+      "-  decrease T",
       "t  toggle temperature",
       "p  toggle pressure",
       "e  toggle total energy",
       "n  toggle particle count",
-      "g  toggle graph HUD"
+      "g  toggle graph HUD",
+      "left click  add atoms",
+      "right click mouse repel/attract"      
     ].join("\n");
   }
 
@@ -427,6 +427,12 @@ function startLJAnimation() {
     for (var i = 1; i < values.length; i += 1) {
       min = Math.min(min, values[i]);
       max = Math.max(max, values[i]);
+    }
+
+    if (metric.key === "particleCount" && max - min < 2) {
+      var center = (max + min) * 0.5;
+      min = center - 1;
+      max = center + 1;
     }
 
     var span = Math.max(1e-12, max - min);
