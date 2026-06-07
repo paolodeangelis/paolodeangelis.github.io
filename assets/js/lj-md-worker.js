@@ -1,7 +1,7 @@
 var LJ_MD_PARTICLE_COUNT = 440;
 var LJ_MD_CLICK_ADD_PARTICLE_COUNT = 10;
 var LJ_MD_MAX_PARTICLE_COUNT = 4000;
-var LJ_MD_PARALLEL_THRESHOLD = 2000;
+var LJ_MD_PARALLEL_THRESHOLD = 5000;
 var LJ_MD_WORKER_COUNT = 4;
 var LJ_MD_FORCE_MODE = "auto"; // "auto", "serial", or "parallel"
 var LJ_MD_PARALLEL_FORCE_BACKEND = "optimized"; // "exact", "optimized", or "approx"; only used by parallel force mode.

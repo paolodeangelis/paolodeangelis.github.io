@@ -1,4 +1,5 @@
 var USE_LJ_MD_ANIMATION = true;
+var LJ_MD_WORKER_VERSION = "2026-06-07-4000";
 var LJ_MD_RENDER_COLOR_MODE = "type"; // "type" or "kinetic".
 var LJ_MD_PARTICLE_ALPHA_MIN = 0.20;
 var LJ_MD_PARTICLE_ALPHA_MAX = 0.70;
@@ -157,7 +158,7 @@ function startLJAnimation() {
     return;
   }
 
-  var worker = new Worker(new URL("lj-md-worker.js", script.src));
+  var worker = new Worker(new URL("lj-md-worker.js?v=" + encodeURIComponent(LJ_MD_WORKER_VERSION), script.src));
   var latestFrame = null;
   var renderPending = false;
   var resizeTimer = null;
