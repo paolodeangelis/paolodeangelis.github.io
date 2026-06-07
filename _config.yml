@@ -86,6 +86,9 @@ mathjax:
 github_buttons:
   enabled: false                                       # Enable only on pages that render GitHub button widgets.
 
+readme_index:
+  enabled: false                                       # Keep repository README files from becoming site pages.
+
 
 ### Buy me a coffee ###
 # See https://www.buymeacoffee.com/
@@ -127,6 +130,7 @@ exclude:
   - vendor
   - README.md
   - assets/js/README.md
+  - assets/js/*.md
   - CONTRIBUTING.md
   - LICENSE
   - TODO.md
