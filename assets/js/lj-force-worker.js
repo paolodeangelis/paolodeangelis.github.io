@@ -48,11 +48,12 @@ function addMouseWallForce(forces, index, x, y, type, typeSigma, data) {
   var overlap = Math.max(0, influenceRadius - r) / softness;
   var coreBoost = r < coreRadius ? 1 + (coreRadius - r) / softness : 1;
   var force = 12 * data.mouseWallEpsilon * overlap * overlap * coreBoost / softness;
+  var direction = data.mouseWallMode === "attractive" ? -1 : 1;
 
   force = Math.min(data.mouseWallMaxForce, force);
 
-  forces[2 * index] += force * dx / r;
-  forces[2 * index + 1] += force * dy / r;
+  forces[2 * index] += direction * force * dx / r;
+  forces[2 * index + 1] += direction * force * dy / r;
 }
 
 self.onmessage = function(event) {
@@ -65,6 +66,8 @@ self.onmessage = function(event) {
   var pairEpsilon = new Float32Array(data.pairEpsilon);
   var pairMode = new Int8Array(data.pairMode);
   var forces = new Float32Array(data.n * 2);
+  var virial = 0;
+  var potential = 0;
 
   for (var i = data.start; i < data.end; i += 1) {
     var ix = positions[2 * i];
@@ -97,6 +100,14 @@ self.onmessage = function(event) {
       forces[2 * i + 1] += fy;
       forces[2 * j] -= fx;
       forces[2 * j + 1] -= fy;
+
+      if (data.needPressure) {
+        virial += dx * fx + dy * fy;
+      }
+
+      if (data.needEnergy) {
+        potential += 4 * epsilon * (invR12 - invR6);
+      }
     }
 
     addWallForce(forces, i, ix, 1, 0, typeI, typeSigma, typeEpsilon, data);
@@ -107,6 +118,8 @@ self.onmessage = function(event) {
   }
 
   self.postMessage({
-    forces: forces.buffer
+    forces: forces.buffer,
+    virialEv: data.needPressure ? virial : 0,
+    potentialEnergyEv: data.needEnergy ? potential : 0
   }, [forces.buffer]);
 };

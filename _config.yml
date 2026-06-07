@@ -122,5 +122,6 @@ exclude:
   - CONTRIBUTING.md
   - LICENSE
   - TODO.md
+  - WEB_PERFORMANCE_REPORT.md
   - scripts
   - "*.log"

@@ -1,4 +1,19 @@
 var USE_LJ_MD_ANIMATION = true;
+var LJ_MD_RENDER_COLOR_MODE = "type"; // "type" or "kinetic".
+var LJ_MD_PARTICLE_ALPHA_MIN = 0.10;
+var LJ_MD_PARTICLE_ALPHA_MAX = 0.75;
+var LJ_MD_SHOW_PRESSURE = false;
+var LJ_MD_SHOW_ENERGY = false;
+var LJ_MD_SHOW_TEMPERATURE = true;
+var LJ_MD_SHOW_PARTICLE_COUNT = true;
+var LJ_MD_GRAPH_HISTORY_LIMIT = 1000;
+var LJ_MD_HUD_BACKGROUND_ALPHA = 0.20;
+var LJ_MD_HUD_PADDING_PX = 3;
+var LJ_MD_GRAPH_WIDTH_PX = 220;
+var LJ_MD_GRAPH_HEIGHT_PX = 46;
+var LJ_MD_HELP_PROMPT_TEXT = "press h for help";
+var LJ_MD_TYPE_COLORS_DARK = ["#f8f8f2", "#49eeba", "#e6455d", "#2a67eb", "#f154f7"];
+var LJ_MD_TYPE_COLORS_LIGHT = ["#1a222c", "#22806b", "#c43855", "#134cc5", "#ca27cf"];
 
 function startParticlesFallback() {
   if (typeof particlesJS !== "function") {
@@ -146,20 +161,57 @@ function startLJAnimation() {
   var latestFrame = null;
   var renderPending = false;
   var resizeTimer = null;
-  var temperatureReadout = document.createElement("div");
+  var diagnosticsReadout = document.createElement("div");
+  var descriptionReadout = document.createElement("div");
+  var graphCanvas = document.createElement("canvas");
+  var graphCtx = graphCanvas.getContext("2d");
+  var helpVisible = false;
+  var graphMode = false;
+  var showTemperature = LJ_MD_SHOW_TEMPERATURE;
+  var showPressure = LJ_MD_SHOW_PRESSURE;
+  var showEnergy = LJ_MD_SHOW_ENERGY;
+  var showParticleCount = LJ_MD_SHOW_PARTICLE_COUNT;
+  var lastSampleSerial = -1;
+  var histories = {
+    temperature: [],
+    pressure: [],
+    energy: [],
+    particleCount: []
+  };
 
-  temperatureReadout.className = "lj-md-temperature-readout";
-  temperatureReadout.style.position = "absolute";
-  temperatureReadout.style.left = "12px";
-  temperatureReadout.style.bottom = "12px";
-  temperatureReadout.style.zIndex = "2";
-  temperatureReadout.style.fontFamily = "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
-  temperatureReadout.style.fontSize = "12px";
-  temperatureReadout.style.lineHeight = "1";
-  temperatureReadout.style.pointerEvents = "none";
-  temperatureReadout.style.opacity = "0.72";
+  diagnosticsReadout.className = "lj-md-diagnostics-readout";
+  diagnosticsReadout.style.position = "absolute";
+  diagnosticsReadout.style.right = "12px";
+  diagnosticsReadout.style.bottom = "12px";
+  diagnosticsReadout.style.zIndex = "2";
+  diagnosticsReadout.style.fontFamily = "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
+  diagnosticsReadout.style.fontSize = "12px";
+  diagnosticsReadout.style.lineHeight = "1.25";
+  diagnosticsReadout.style.textAlign = "right";
+  diagnosticsReadout.style.pointerEvents = "none";
+  diagnosticsReadout.style.opacity = "0.76";
+  diagnosticsReadout.style.padding = LJ_MD_HUD_PADDING_PX + "px";
+  diagnosticsReadout.style.whiteSpace = "pre";
+  descriptionReadout.className = "lj-md-description-readout";
+  descriptionReadout.style.position = "absolute";
+  descriptionReadout.style.left = "12px";
+  descriptionReadout.style.bottom = "12px";
+  descriptionReadout.style.zIndex = "2";
+  descriptionReadout.style.fontFamily = "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
+  descriptionReadout.style.fontSize = "12px";
+  descriptionReadout.style.lineHeight = "1.25";
+  descriptionReadout.style.pointerEvents = "none";
+  descriptionReadout.style.opacity = "0.76";
+  descriptionReadout.style.padding = LJ_MD_HUD_PADDING_PX + "px";
+  descriptionReadout.style.whiteSpace = "pre";
+  descriptionReadout.textContent = LJ_MD_HELP_PROMPT_TEXT;
+  graphCanvas.width = LJ_MD_GRAPH_WIDTH_PX;
+  graphCanvas.height = LJ_MD_GRAPH_HEIGHT_PX * 3 + 18;
+  graphCanvas.style.display = "none";
   root.style.position = root.style.position || "relative";
-  root.appendChild(temperatureReadout);
+  root.appendChild(diagnosticsReadout);
+  root.appendChild(descriptionReadout);
+  diagnosticsReadout.appendChild(graphCanvas);
 
   function sizeCanvas() {
     var ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -183,14 +235,273 @@ function startLJAnimation() {
     var isDark = document.documentElement.getAttribute("data-theme") !== "light";
 
     return isDark ? {
-      cold: [255, 255, 255, 0.86],
-      mid: [110, 204, 175, 0.92],
-      hot: [233, 100, 121, 0.94]
+      cold: [255, 255, 255],
+      mid: [110, 204, 175],
+      hot: [233, 100, 121],
+      type: LJ_MD_TYPE_COLORS_DARK
     } : {
-      cold: [77, 153, 135, 0.72],
-      mid: [34, 48, 60, 0.78],
-      hot: [211, 76, 96, 0.82]
+      cold: [77, 153, 135],
+      mid: [34, 48, 60],
+      hot: [211, 76, 96],
+      type: LJ_MD_TYPE_COLORS_LIGHT
     };
+  }
+
+  function hudBackground() {
+    return document.documentElement.getAttribute("data-theme") === "light" ?
+      "rgba(255, 255, 255, " + LJ_MD_HUD_BACKGROUND_ALPHA + ")" :
+      "rgba(26, 34, 44, " + LJ_MD_HUD_BACKGROUND_ALPHA + ")";
+  }
+
+  function readoutColor() {
+    return document.documentElement.getAttribute("data-theme") === "light" ?
+      "rgba(26, 34, 44, 0.86)" :
+      "rgba(255, 255, 255, 0.86)";
+  }
+
+  function accentColors() {
+    return document.documentElement.getAttribute("data-theme") === "light" ?
+      {
+        temperature: "#c43855",
+        pressure: "#22806b",
+        energy: "#134cc5",
+        particleCount: "#946200",
+        tick: "rgba(26, 34, 44, 0.5)"
+      } :
+      {
+        temperature: "#e6455d",
+        pressure: "#49eeba",
+        energy: "#7aa2ff",
+        particleCount: "#ffd166",
+        tick: "rgba(255, 255, 255, 0.5)"
+      };
+  }
+
+  function setHudTheme() {
+    var background = hudBackground();
+    var color = readoutColor();
+
+    diagnosticsReadout.style.background = background;
+    descriptionReadout.style.background = background;
+    diagnosticsReadout.style.color = color;
+    descriptionReadout.style.color = color;
+  }
+
+  function sendDiagnosticsRequest() {
+    worker.postMessage({
+      type: "diagnostics",
+      pressure: showPressure,
+      energy: showEnergy
+    });
+  }
+
+  function pushHistory(list, value) {
+    if (typeof value !== "number" || !isFinite(value)) {
+      return;
+    }
+
+    list.push(value);
+
+    if (list.length > LJ_MD_GRAPH_HISTORY_LIMIT) {
+      list.splice(0, list.length - LJ_MD_GRAPH_HISTORY_LIMIT);
+    }
+  }
+
+  function recordSample(frame) {
+    if (frame.sampleSerial === lastSampleSerial) {
+      return;
+    }
+
+    lastSampleSerial = frame.sampleSerial;
+    pushHistory(histories.temperature, frame.temperatureK);
+
+    if (showPressure && frame.pressureBar !== null) {
+      pushHistory(histories.pressure, frame.pressureBar);
+    }
+
+    if (showEnergy && frame.totalEnergyEv !== null) {
+      pushHistory(histories.energy, frame.totalEnergyEv);
+    }
+
+    if (showParticleCount) {
+      pushHistory(histories.particleCount, frame.count);
+    }
+  }
+
+  function formatMetric(value, digits, suffix) {
+    if (typeof value !== "number" || !isFinite(value)) {
+      return "--";
+    }
+
+    return value.toFixed(digits) + suffix;
+  }
+
+  function activeMetrics(frame) {
+    var metrics = [];
+
+    if (showTemperature) {
+      metrics.push({
+        key: "temperature",
+        title: "T",
+        text: "T = " + Math.round(frame.temperatureK) + " K -> " + Math.round(frame.targetTemperatureK) + " K",
+        values: histories.temperature
+      });
+    }
+
+    if (showPressure) {
+      metrics.push({
+        key: "pressure",
+        title: "P",
+        text: "P = " + formatMetric(frame.pressureBar, 0, " bar"),
+        values: histories.pressure
+      });
+    }
+
+    if (showEnergy) {
+      metrics.push({
+        key: "energy",
+        title: "E",
+        text: "E = " + formatMetric(frame.totalEnergyEv, 3, " eV"),
+        values: histories.energy
+      });
+    }
+
+    if (showParticleCount) {
+      metrics.push({
+        key: "particleCount",
+        title: "N",
+        text: "N = " + frame.count,
+        values: histories.particleCount
+      });
+    }
+
+    return metrics;
+  }
+
+  function updateHelpText() {
+    if (!helpVisible) {
+      descriptionReadout.textContent = LJ_MD_HELP_PROMPT_TEXT;
+      return;
+    }
+
+    descriptionReadout.textContent = [
+      "LJ MD controls",
+      "h  toggle help",
+      "+  target T +1 K",
+      "-  target T -1 K",
+      "hold +/- 10 K repeat",
+      "left click  add atoms",
+      "right click mouse repel/attract",
+      "t  toggle temperature",
+      "p  toggle pressure",
+      "e  toggle total energy",
+      "n  toggle particle count",
+      "g  toggle graph HUD"
+    ].join("\n");
+  }
+
+  function drawOnePlot(y, metric, colorMap) {
+    var values = metric.values;
+    var w = graphCanvas.width;
+    var h = LJ_MD_GRAPH_HEIGHT_PX;
+    var color = colorMap[metric.key];
+    var plotLeft = 44;
+    var plotRight = w - 2;
+    var plotTop = y + 14;
+    var plotBottom = y + h - 4;
+
+    graphCtx.fillStyle = color;
+    graphCtx.font = "12px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
+    graphCtx.fillText(metric.title, 2, y + 11);
+
+    graphCtx.strokeStyle = colorMap.tick;
+    graphCtx.lineWidth = 1;
+
+    if (values.length < 2) {
+      return;
+    }
+
+    var min = values[0];
+    var max = values[0];
+
+    for (var i = 1; i < values.length; i += 1) {
+      min = Math.min(min, values[i]);
+      max = Math.max(max, values[i]);
+    }
+
+    var span = Math.max(1e-12, max - min);
+    graphCtx.fillStyle = colorMap.tick;
+    graphCtx.font = "10px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
+    graphCtx.textAlign = "right";
+    graphCtx.fillText(max.toPrecision(3), plotLeft - 5, plotTop + 3);
+    graphCtx.fillText(min.toPrecision(3), plotLeft - 5, plotBottom);
+
+    for (var tick = 0; tick <= 2; tick += 1) {
+      var yTick = plotTop + tick * (plotBottom - plotTop) / 2;
+      graphCtx.beginPath();
+      graphCtx.moveTo(plotLeft - 3, yTick);
+      graphCtx.lineTo(plotLeft, yTick);
+      graphCtx.stroke();
+    }
+
+    graphCtx.textAlign = "left";
+    graphCtx.strokeStyle = color;
+    graphCtx.lineWidth = 1.5;
+    graphCtx.beginPath();
+
+    for (var j = 0; j < values.length; j += 1) {
+      var x = values.length === 1 ? plotLeft : plotLeft + j * (plotRight - plotLeft) / (values.length - 1);
+      var yValue = plotTop + (plotBottom - plotTop) * (1 - (values[j] - min) / span);
+
+      if (j === 0) {
+        graphCtx.moveTo(x, yValue);
+      } else {
+        graphCtx.lineTo(x, yValue);
+      }
+    }
+
+    graphCtx.stroke();
+  }
+
+  function updateDiagnostics(frame) {
+    var metrics = activeMetrics(frame);
+
+    setHudTheme();
+
+    if (!graphMode) {
+      graphCanvas.style.display = "none";
+      diagnosticsReadout.textContent = metrics.map(function(metric) {
+        return metric.text;
+      }).concat("mouse = " + (frame.mouseWallMode === "attractive" ? "attract" : "repel")).join("\n");
+      return;
+    }
+
+    diagnosticsReadout.textContent = "";
+    graphCanvas.style.display = "block";
+    graphCanvas.width = LJ_MD_GRAPH_WIDTH_PX;
+    graphCanvas.height = Math.max(1, metrics.length) * LJ_MD_GRAPH_HEIGHT_PX + 18;
+    diagnosticsReadout.appendChild(graphCanvas);
+
+    graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+    graphCtx.fillStyle = hudBackground();
+    graphCtx.fillRect(0, 0, graphCanvas.width, graphCanvas.height);
+
+    var colors = accentColors();
+    for (var i = 0; i < metrics.length; i += 1) {
+      drawOnePlot(i * LJ_MD_GRAPH_HEIGHT_PX, metrics[i], colors);
+    }
+
+    graphCtx.fillStyle = readoutColor();
+    graphCtx.font = "12px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
+    graphCtx.textAlign = "right";
+    graphCtx.fillText(frame.mouseWallMode === "attractive" ? "mouse attract" : "mouse repel", graphCanvas.width - 2, graphCanvas.height - 4);
+    graphCtx.textAlign = "left";
+  }
+
+  function alphaFor(value) {
+    var s = Math.max(0, Math.min(1, value));
+
+    return LJ_MD_PARTICLE_ALPHA_MIN + (LJ_MD_PARTICLE_ALPHA_MAX - LJ_MD_PARTICLE_ALPHA_MIN) * s;
   }
 
   function mixColor(a, b, t) {
@@ -198,17 +509,40 @@ function startLJAnimation() {
     var r = Math.round(a[0] + (b[0] - a[0]) * s);
     var g = Math.round(a[1] + (b[1] - a[1]) * s);
     var blue = Math.round(a[2] + (b[2] - a[2]) * s);
-    var alpha = a[3] + (b[3] - a[3]) * s;
 
-    return "rgba(" + r + "," + g + "," + blue + "," + alpha.toFixed(3) + ")";
+    return [r, g, blue];
   }
 
   function kineticColor(colors, value) {
+    var rgb;
+
     if (value < 0.5) {
-      return mixColor(colors.cold, colors.mid, value * 2);
+      rgb = mixColor(colors.cold, colors.mid, value * 2);
+    } else {
+      rgb = mixColor(colors.mid, colors.hot, (value - 0.5) * 2);
     }
 
-    return mixColor(colors.mid, colors.hot, (value - 0.5) * 2);
+    return "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + "," + alphaFor(value).toFixed(3) + ")";
+  }
+
+  function hexToRgb(hex) {
+    var clean = hex.charAt(0) === "#" ? hex.slice(1) : hex;
+    var value = parseInt(clean.length === 3 ?
+      clean.replace(/(.)/g, "$1$1") :
+      clean, 16);
+
+    return [
+      (value >> 16) & 255,
+      (value >> 8) & 255,
+      value & 255
+    ];
+  }
+
+  function typeColor(colors, typeId, value) {
+    var palette = colors.type;
+    var rgb = hexToRgb(palette[typeId % palette.length]);
+
+    return "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + "," + alphaFor(value).toFixed(3) + ")";
   }
 
   function drawFrame(frame) {
@@ -216,6 +550,7 @@ function startLJAnimation() {
     var positions = new Float32Array(frame.positions);
     var kineticColors = new Float32Array(frame.kineticColors);
     var radii = new Float32Array(frame.radii);
+    var typeIds = new Int16Array(frame.typeIds);
     var n = frame.count;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -227,16 +562,17 @@ function startLJAnimation() {
       var colorValue = kineticColors[i];
 
       ctx.beginPath();
-      ctx.fillStyle = kineticColor(colors, colorValue);
+      ctx.fillStyle = LJ_MD_RENDER_COLOR_MODE === "type" ?
+        typeColor(colors, typeIds[i], colorValue) :
+        kineticColor(colors, colorValue);
       ctx.arc(x, y, radii[i], 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.restore();
-    temperatureReadout.style.color = document.documentElement.getAttribute("data-theme") === "light" ?
-      "rgba(26, 34, 44, 0.82)" :
-      "rgba(255, 255, 255, 0.82)";
-    temperatureReadout.textContent = "T = " + Math.round(frame.temperatureK) + " K";
+    recordSample(frame);
+    updateHelpText();
+    updateDiagnostics(frame);
   }
 
   function requestRender() {
@@ -281,6 +617,33 @@ function startLJAnimation() {
     });
   });
 
+  canvas.addEventListener("mousedown", function(event) {
+    var rect = canvas.getBoundingClientRect();
+    var ratioX = canvas.width / Math.max(1, rect.width);
+    var ratioY = canvas.height / Math.max(1, rect.height);
+    var x = (event.clientX - rect.left) * ratioX;
+    var y = (event.clientY - rect.top) * ratioY;
+
+    if (event.button === 0) {
+      worker.postMessage({
+        type: "addParticles",
+        x: x,
+        y: y
+      });
+    } else if (event.button === 2) {
+      worker.postMessage({
+        type: "toggleMouseWall",
+        x: x,
+        y: y
+      });
+      event.preventDefault();
+    }
+  });
+
+  canvas.addEventListener("contextmenu", function(event) {
+    event.preventDefault();
+  });
+
   canvas.addEventListener("mouseleave", function() {
     worker.postMessage({
       type: "mouse",
@@ -288,12 +651,58 @@ function startLJAnimation() {
     });
   });
 
+  window.addEventListener("keydown", function(event) {
+    var tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
+
+    if (tag === "input" || tag === "textarea" || tag === "select" || event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+
+    if (event.key === "h" || event.key === "H") {
+      helpVisible = !helpVisible;
+      updateHelpText();
+      event.preventDefault();
+    } else if (event.key === "t" || event.key === "T") {
+      showTemperature = !showTemperature;
+      event.preventDefault();
+    } else if (event.key === "p" || event.key === "P") {
+      showPressure = !showPressure;
+      sendDiagnosticsRequest();
+      event.preventDefault();
+    } else if (event.key === "e" || event.key === "E") {
+      showEnergy = !showEnergy;
+      sendDiagnosticsRequest();
+      event.preventDefault();
+    } else if (event.key === "n" || event.key === "N") {
+      showParticleCount = !showParticleCount;
+      event.preventDefault();
+    } else if (event.key === "g" || event.key === "G") {
+      graphMode = !graphMode;
+      event.preventDefault();
+    } else if (event.key === "+" || event.key === "=") {
+      worker.postMessage({
+        type: "adjustTemperature",
+        deltaK: event.repeat ? 10 : 1
+      });
+      event.preventDefault();
+    } else if (event.key === "-" || event.key === "_") {
+      worker.postMessage({
+        type: "adjustTemperature",
+        deltaK: event.repeat ? -10 : -1
+      });
+      event.preventDefault();
+    }
+  });
+
   sizeCanvas();
+  setHudTheme();
+  updateHelpText();
   worker.postMessage({
     type: "start",
     width: canvas.width,
     height: canvas.height
   });
+  sendDiagnosticsRequest();
 }
 
 document.addEventListener("DOMContentLoaded", function() {

@@ -1,6 +1,8 @@
 var LJ_MD_PARTICLE_COUNT = 440;
-var LJ_MD_PARALLEL_THRESHOLD = 500;
-var LJ_MD_WORKER_COUNT = 2;
+var LJ_MD_CLICK_ADD_PARTICLE_COUNT = 10;
+var LJ_MD_MAX_PARTICLE_COUNT = 1200;
+var LJ_MD_PARALLEL_THRESHOLD = 1000;
+var LJ_MD_WORKER_COUNT = 4;
 var LJ_MD_FORCE_MODE = "auto"; // "auto", "serial", or "parallel"
 var LJ_MD_PARALLEL_FORCE_BACKEND = "optimized"; // "exact", "optimized", or "approx"; only used by parallel force mode.
 var LJ_MD_APPROX_FORCE_TABLE_BITS = 9; // 2^9 = 512 samples per type pair.
@@ -8,15 +10,16 @@ var LJ_MD_INITIAL_TEMPERATURE_K = 300;
 var LJ_MD_TIME_STEP_PS = 0.0025;
 var LJ_MD_STEPS_PER_FRAME = 6;
 var LJ_MD_TARGET_FPS = 24;
-var LJ_MD_DENSITY_2D = 0.5;
+var LJ_MD_DENSITY_2D = 0.05;
 var LJ_MD_THERMOSTAT_ENABLED = true;
-var LJ_MD_THERMOSTAT_TAU_STEPS = 500;
+var LJ_MD_THERMOSTAT_TAU_STEPS = 200;
 var LJ_MD_THERMOSTAT_CHI_SQUARE_MODE = "approx"; // "approx" is faster; "exact" samples dof - 1 Gaussians.
 var LJ_MD_TEMPERATURE_SAMPLE_STEPS = 10;
+var LJ_MD_PRESSURE_SAMPLE_STEPS = 10;
+var LJ_MD_PRESSURE_BOX_THICKNESS_ANGSTROM = 10.0; // Converts the 2D box into a pseudo 3D volume for bar display.
 var LJ_MD_COLOR_PERCENTILE_LOW = 0.2;
 var LJ_MD_COLOR_PERCENTILE_HIGH = 0.9;
-// Render radius is sigmaAngstrom * radiusScale * current pixel scale; all radii are scaled down together if needed.
-var LJ_MD_RENDER_RADIUS_MAX_PX = 6.0;
+// Render radius is controlled only by each particle type's radiusPx. It does not change physics.
 var LJ_MD_RESIZE_KICK_A_PER_PS = .005;
 var LJ_MD_MAX_PARTICLE_KINETIC_DELTA_K = 1000;
 var LJ_MD_MAX_TOTAL_FORCE_EV_PER_A = 50.0;
@@ -30,55 +33,72 @@ var LJ_MD_MOUSE_WALL_RADIUS_ANGSTROM = 1.0;
 var LJ_MD_MOUSE_WALL_SOFTNESS_ANGSTROM = 2.0;
 var LJ_MD_MOUSE_WALL_EPSILON_EV = 0.5;
 var LJ_MD_MOUSE_WALL_MAX_FORCE_EV_PER_A = 50.0;
+var LJ_MD_MOUSE_WALL_INITIAL_MODE = "repulsive"; // "repulsive" or "attractive".
 var LJ_MD_PARTICLE_TYPES = [
   {
     name: "A",
-    fraction: 0.90,
-    massAmu: 7.0,
-    sigmaAngstrom: 0.6,
-    epsilonEv: 0.013,
-    radiusScale: 1.7
+    fraction: 0.80,
+    massAmu: 8.0,
+    sigmaAngstrom: 0.7,
+    epsilonEv: 0.015,
+    radiusPx: 2.0
   },
   {
     name: "B",
-    fraction: 0.08,
+    fraction: 0.10,
     massAmu: 15.0,
-    sigmaAngstrom: 0.7,
+    sigmaAngstrom: 1.2,
     epsilonEv: 0.10,
-    radiusScale: 1.8
+    radiusPx: 6.0
   },
   {
     name: "C",
     fraction: 0.03,
     massAmu: 40.0,
-    sigmaAngstrom: 1.0,
+    sigmaAngstrom: 1.2,
     epsilonEv: 0.05,
-    radiusScale: 1.5
+    radiusPx: 7.0
+  },
+  {
+    name: "D",
+    fraction: 0.07,
+    massAmu: 13.0,
+    sigmaAngstrom: 0.7,
+    epsilonEv: 0.1,
+    radiusPx: 3.5
   }
 ];
 // Pair tables follow the order above: A, B, C. Keep matrices symmetric.
+// For "lj" pairs, equilibrium distance is r0 = 2^(1/6) * sigma.
+// Set LJ_MD_PAIR_R0_ANGSTROM entries to control that final distance directly;
+// null uses sigma mixing or LJ_MD_PAIR_SIGMA_ANGSTROM.
+var LJ_MD_PAIR_R0_ANGSTROM = null;
 // sigma controls interaction distance; epsilon controls attraction/repulsion strength.
 var LJ_MD_PAIR_SIGMA_ANGSTROM = [
-  [0.80, 0.8, 0.8], // A-A, A-B, A-C
-  [0.8, null, null], // B-A, B-B, B-C
-  [0.8, null, null]  // C-A, C-B, C-C
+  [null,null,null,null], // A-A, A-B, A-C
+  [null,null,null,null], // B-A, B-B, B-C
+  [null,null,null,null],   // C-A, C-B, C-C
+  [null,null,null,null],   // C-A, C-B, C-C
 ];
 var LJ_MD_PAIR_EPSILON_EV = [
-  [0.0230, 0.0530, 0.0530], // A-A, A-B, A-C
-  [0.0530, null, null], // B-A, B-B, B-C
-  [0.0503, null, null]  // C-A, C-B, C-C
+  [null,null,null,null], // A-A, A-B, A-C
+  [null,null,null,null], // B-A, B-B, B-C
+  [null,null,null,null],   // C-A, C-B, C-C
+  [null,null,null,null],   // C-A, C-B, C-C
 ];
 // "lj" = attractive + repulsive Lennard-Jones.
 // "repulsive" = Weeks-Chandler-Andersen style: only the repulsive branch.
 // Example: make A-B not attractive by setting [0][1] and [1][0] to "repulsive".
 var LJ_MD_PAIR_MODE = [
-  ["lj", "repulsive", "repulsive"],
-  ["repulsive", "lj", "lj"],
-  ["repulsive", "lj", "lj"]
+  ["lj", "repulsive", "repulsive", "repulsive"],
+  ["repulsive", "lj", "lj", "repulsive"],
+  ["repulsive", "lj", "lj", "repulsive"],
+  ["repulsive", "repulsive", "repulsive", "lj"],
 ];
 
 var KB_EV_PER_K = 8.617333262145e-5;
 var AMU_A2_PER_PS2_TO_EV = 1.0364269656262175e-4;
+var EV_PER_A3_TO_BAR = 1602176.634;
 
 var state = null;
 var timerId = null;
@@ -118,9 +138,9 @@ function chiSquare(degrees) {
   return sum;
 }
 
-function boxFor(widthPx, heightPx) {
+function boxFor(widthPx, heightPx, particleCount) {
   var aspect = widthPx / heightPx;
-  var boxHeight = Math.sqrt(LJ_MD_PARTICLE_COUNT / (LJ_MD_DENSITY_2D * aspect));
+  var boxHeight = Math.sqrt(particleCount / (LJ_MD_DENSITY_2D * aspect));
 
   return {
     width: boxHeight * aspect,
@@ -174,7 +194,7 @@ function buildTypeTables(sim) {
   sim.typeMassFactors = new Float32Array(typeCount);
   sim.typeSigma = new Float32Array(typeCount);
   sim.typeEpsilon = new Float32Array(typeCount);
-  sim.typeRadiusScale = new Float32Array(typeCount);
+  sim.typeRadiusPx = new Float32Array(typeCount);
   sim.pairSigma = new Float32Array(typeCount * typeCount);
   sim.pairEpsilon = new Float32Array(typeCount * typeCount);
   sim.pairMode = new Int8Array(typeCount * typeCount);
@@ -184,7 +204,7 @@ function buildTypeTables(sim) {
     sim.typeMassFactors[i] = type.massAmu * AMU_A2_PER_PS2_TO_EV;
     sim.typeSigma[i] = type.sigmaAngstrom;
     sim.typeEpsilon[i] = type.epsilonEv;
-    sim.typeRadiusScale[i] = type.radiusScale;
+    sim.typeRadiusPx[i] = type.radiusPx;
   }
 
   for (var a = 0; a < typeCount; a += 1) {
@@ -193,13 +213,18 @@ function buildTypeTables(sim) {
       var sigmaOverride = LJ_MD_PAIR_SIGMA_ANGSTROM && LJ_MD_PAIR_SIGMA_ANGSTROM[a] ?
         LJ_MD_PAIR_SIGMA_ANGSTROM[a][b] :
         null;
+      var r0Override = LJ_MD_PAIR_R0_ANGSTROM && LJ_MD_PAIR_R0_ANGSTROM[a] ?
+        LJ_MD_PAIR_R0_ANGSTROM[a][b] :
+        null;
       var epsilonOverride = LJ_MD_PAIR_EPSILON_EV && LJ_MD_PAIR_EPSILON_EV[a] ?
         LJ_MD_PAIR_EPSILON_EV[a][b] :
         null;
 
-      sim.pairSigma[p] = sigmaOverride == null ?
-        0.5 * (sim.typeSigma[a] + sim.typeSigma[b]) :
-        sigmaOverride;
+      sim.pairSigma[p] = r0Override == null ?
+        (sigmaOverride == null ?
+          0.5 * (sim.typeSigma[a] + sim.typeSigma[b]) :
+          sigmaOverride) :
+        r0Override / Math.pow(2, 1 / 6);
       sim.pairEpsilon[p] = epsilonOverride == null ?
         Math.sqrt(sim.typeEpsilon[a] * sim.typeEpsilon[b]) :
         epsilonOverride;
@@ -276,7 +301,7 @@ function initializeVelocities(sim) {
   }
 }
 
-function shouldUseParallel() {
+function shouldUseParallel(particleCount) {
   if (LJ_MD_FORCE_MODE === "serial") {
     return false;
   }
@@ -285,7 +310,7 @@ function shouldUseParallel() {
     return LJ_MD_WORKER_COUNT > 1;
   }
 
-  return LJ_MD_WORKER_COUNT > 1 && LJ_MD_PARTICLE_COUNT >= LJ_MD_PARALLEL_THRESHOLD;
+  return LJ_MD_WORKER_COUNT > 1 && particleCount >= LJ_MD_PARALLEL_THRESHOLD;
 }
 
 function setupForceWorkers(sim) {
@@ -320,7 +345,7 @@ function setupForceWorkers(sim) {
 }
 
 function createState(width, height) {
-  var box = boxFor(width, height);
+  var box = boxFor(width, height, LJ_MD_PARTICLE_COUNT);
   var sim = {
     n: LJ_MD_PARTICLE_COUNT,
     widthPx: width,
@@ -335,13 +360,22 @@ function createState(width, height) {
     stepsPerFrame: LJ_MD_STEPS_PER_FRAME,
     targetFps: LJ_MD_TARGET_FPS,
     workerCount: Math.max(1, LJ_MD_WORKER_COUNT),
-    useParallelForces: shouldUseParallel(),
+    useParallelForces: shouldUseParallel(LJ_MD_PARTICLE_COUNT),
     resizeKickAps: LJ_MD_RESIZE_KICK_A_PER_PS,
     stepCount: 0,
+    sampleSerial: 0,
     temperatureK: LJ_MD_INITIAL_TEMPERATURE_K,
+    targetTemperatureK: LJ_MD_INITIAL_TEMPERATURE_K,
+    pressureBar: 0,
+    virialEv: 0,
+    potentialEnergyEv: 0,
+    totalEnergyEv: 0,
+    needPressure: false,
+    needEnergy: false,
     colorMinEv: -KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K * Math.log(1 - LJ_MD_COLOR_PERCENTILE_LOW),
     colorMaxEv: -KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K * Math.log(1 - LJ_MD_COLOR_PERCENTILE_HIGH),
     mouseActive: false,
+    mouseWallMode: LJ_MD_MOUSE_WALL_INITIAL_MODE === "attractive" ? "attractive" : "repulsive",
     mouseX: 0,
     mouseY: 0,
     positions: new Float32Array(LJ_MD_PARTICLE_COUNT * 2),
@@ -360,6 +394,22 @@ function createState(width, height) {
   updateTemperatureScale(sim);
 
   return sim;
+}
+
+function chooseRandomType() {
+  var totalFraction = normalizeFractions(LJ_MD_PARTICLE_TYPES);
+  var target = Math.random() * totalFraction;
+  var running = 0;
+
+  for (var t = 0; t < LJ_MD_PARTICLE_TYPES.length; t += 1) {
+    running += Math.max(0, LJ_MD_PARTICLE_TYPES[t].fraction || 0);
+
+    if (target <= running) {
+      return t;
+    }
+  }
+
+  return Math.max(0, LJ_MD_PARTICLE_TYPES.length - 1);
 }
 
 function pairIndex(sim, i, j) {
@@ -431,11 +481,12 @@ function addMouseWallForceTo(forces, sim, index, x, y) {
   var overlap = Math.max(0, influenceRadius - r) / softness;
   var coreBoost = r < coreRadius ? 1 + (coreRadius - r) / softness : 1;
   var force = 12 * LJ_MD_MOUSE_WALL_EPSILON_EV * overlap * overlap * coreBoost / softness;
+  var direction = sim.mouseWallMode === "attractive" ? -1 : 1;
 
   force = Math.min(LJ_MD_MOUSE_WALL_MAX_FORCE_EV_PER_A, force);
 
-  forces[2 * index] += force * dx / r;
-  forces[2 * index + 1] += force * dy / r;
+  forces[2 * index] += direction * force * dx / r;
+  forces[2 * index + 1] += direction * force * dy / r;
 }
 
 function capTotalForces(sim) {
@@ -457,6 +508,8 @@ function capTotalForces(sim) {
 function computeForcesSerial(sim) {
   var positions = sim.positions;
   var forces = sim.forces;
+  var virial = 0;
+  var potential = 0;
 
   forces.fill(0);
 
@@ -490,6 +543,14 @@ function computeForcesSerial(sim) {
       forces[2 * i + 1] += fy;
       forces[2 * j] -= fx;
       forces[2 * j + 1] -= fy;
+
+      if (sim.needPressure) {
+        virial += dx * fx + dy * fy;
+      }
+
+      if (sim.needEnergy) {
+        potential += 4 * epsilon * (invR12 - invR6);
+      }
     }
 
     addWallForceTo(forces, sim, i, ix, 1, 0);
@@ -500,6 +561,8 @@ function computeForcesSerial(sim) {
   }
 
   capTotalForces(sim);
+  sim.virialEv = sim.needPressure ? virial : 0;
+  sim.potentialEnergyEv = sim.needEnergy ? potential : 0;
 }
 
 function computeForcesParallel(sim, done) {
@@ -515,6 +578,8 @@ function computeForcesParallel(sim, done) {
   var workers = forceWorkers.length;
   var chunk = Math.ceil(sim.n / workers);
   var totalForces = sim.forces;
+  var totalVirial = 0;
+  var totalPotential = 0;
 
   totalForces.fill(0);
 
@@ -536,11 +601,20 @@ function computeForcesParallel(sim, done) {
         totalForces[i] += partial[i];
       }
 
+      if (sim.needPressure) {
+        totalVirial += event.data.virialEv || 0;
+      }
+
+      if (sim.needEnergy) {
+        totalPotential += event.data.potentialEnergyEv || 0;
+      }
       completed += 1;
 
       if (completed === workers) {
         forceWorkerBusy = false;
         capTotalForces(sim);
+        sim.virialEv = sim.needPressure ? totalVirial : 0;
+        sim.potentialEnergyEv = sim.needEnergy ? totalPotential : 0;
         done();
       }
     };
@@ -574,11 +648,14 @@ function computeForcesParallel(sim, done) {
       mouseWallSoftness: LJ_MD_MOUSE_WALL_SOFTNESS_ANGSTROM,
       mouseWallEpsilon: LJ_MD_MOUSE_WALL_EPSILON_EV,
       mouseWallMaxForce: LJ_MD_MOUSE_WALL_MAX_FORCE_EV_PER_A,
+      mouseWallMode: sim.mouseWallMode,
       wallMode: LJ_MD_WALL_MODE,
       reflectiveWallPadding: LJ_MD_REFLECTIVE_WALL_PADDING_ANGSTROM,
       wallSigmaScale: LJ_MD_WALL_SIGMA_SCALE,
       wallAppearanceDistance: LJ_MD_WALL_APPEARANCE_DISTANCE_ANGSTROM,
       wallMaxForce: LJ_MD_WALL_MAX_FORCE_EV_PER_A,
+      needPressure: sim.needPressure,
+      needEnergy: sim.needEnergy,
       approxTableBits: LJ_MD_APPROX_FORCE_TABLE_BITS
     }, [
       positionsSnapshot.buffer,
@@ -632,6 +709,28 @@ function kineticEnergy(sim) {
   return kinetic;
 }
 
+function updatePressure(sim) {
+  if (!sim.needPressure) {
+    sim.pressureBar = 0;
+    return;
+  }
+
+  var volumeA3 = Math.max(1e-9, sim.boxWidth * sim.boxHeight * LJ_MD_PRESSURE_BOX_THICKNESS_ANGSTROM);
+  var idealEv = sim.n * KB_EV_PER_K * sim.temperatureK;
+  var virialEv = 0.5 * (sim.virialEv || 0);
+
+  sim.pressureBar = (idealEv + virialEv) / volumeA3 * EV_PER_A3_TO_BAR;
+}
+
+function updateTotalEnergy(sim, kinetic) {
+  if (!sim.needEnergy) {
+    sim.totalEnergyEv = 0;
+    return;
+  }
+
+  sim.totalEnergyEv = kinetic + (sim.potentialEnergyEv || 0);
+}
+
 function clampInsideWall(sim, index) {
   var wallDistance = wallPaddingFor();
   var minX = Math.min(wallDistance, sim.boxWidth * 0.5);
@@ -677,9 +776,12 @@ function updateTemperatureScale(sim) {
   var dof = Math.max(1, 2 * sim.n - 2);
   var kinetic = kineticEnergy(sim);
 
+  sim.sampleSerial += 1;
   sim.temperatureK = 2 * kinetic / (dof * KB_EV_PER_K);
   sim.colorMinEv = -KB_EV_PER_K * sim.temperatureK * Math.log(1 - LJ_MD_COLOR_PERCENTILE_LOW);
   sim.colorMaxEv = -KB_EV_PER_K * sim.temperatureK * Math.log(1 - LJ_MD_COLOR_PERCENTILE_HIGH);
+  updatePressure(sim);
+  updateTotalEnergy(sim, kinetic);
 }
 
 function applyVelocityRescaleThermostat(sim) {
@@ -694,7 +796,7 @@ function applyVelocityRescaleThermostat(sim) {
     return;
   }
 
-  var targetKinetic = 0.5 * dof * KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K;
+  var targetKinetic = 0.5 * dof * KB_EV_PER_K * sim.targetTemperatureK;
   var c = Math.exp(-sim.dt / sim.tauPs);
   var r = randomNormal();
   var s = chiSquare(Math.max(1, dof - 1));
@@ -723,6 +825,8 @@ function runMdStep(sim, remaining, done) {
 
   if (sim.stepCount % LJ_MD_TEMPERATURE_SAMPLE_STEPS === 0) {
     updateTemperatureScale(sim);
+  } else if (sim.stepCount % LJ_MD_PRESSURE_SAMPLE_STEPS === 0) {
+    updatePressure(sim);
   }
 
   computeForces(sim, function() {
@@ -734,8 +838,8 @@ function emitFrame(sim) {
   var positionsPx = new Float32Array(sim.n * 2);
   var kineticColors = new Float32Array(sim.n);
   var radii = new Float32Array(sim.n);
+  var typeIds = sim.typeIds.slice();
   var denom = Math.max(1e-12, sim.colorMaxEv - sim.colorMinEv);
-  var maxRadius = 0;
 
   for (var i = 0; i < sim.n; i += 1) {
     var type = sim.typeIds[i];
@@ -746,16 +850,7 @@ function emitFrame(sim) {
     positionsPx[2 * i] = sim.offsetX + sim.positions[2 * i] * sim.scale;
     positionsPx[2 * i + 1] = sim.offsetY + sim.positions[2 * i + 1] * sim.scale;
     kineticColors[i] = Math.max(0, Math.min(1, (ke - sim.colorMinEv) / denom));
-    radii[i] = sim.typeSigma[type] * sim.typeRadiusScale[type] * sim.scale;
-    maxRadius = Math.max(maxRadius, radii[i]);
-  }
-
-  if (maxRadius > LJ_MD_RENDER_RADIUS_MAX_PX) {
-    var radiusScale = LJ_MD_RENDER_RADIUS_MAX_PX / maxRadius;
-
-    for (var j = 0; j < sim.n; j += 1) {
-      radii[j] *= radiusScale;
-    }
+    radii[i] = sim.typeRadiusPx[type];
   }
 
   self.postMessage({
@@ -764,9 +859,15 @@ function emitFrame(sim) {
     positions: positionsPx.buffer,
     kineticColors: kineticColors.buffer,
     radii: radii.buffer,
+    typeIds: typeIds.buffer,
     forceMode: sim.useParallelForces ? "parallel" : "serial",
-    temperatureK: sim.temperatureK
-  }, [positionsPx.buffer, kineticColors.buffer, radii.buffer]);
+    temperatureK: sim.temperatureK,
+    pressureBar: sim.needPressure ? sim.pressureBar : null,
+    totalEnergyEv: sim.needEnergy ? sim.totalEnergyEv : null,
+    targetTemperatureK: sim.targetTemperatureK,
+    sampleSerial: sim.sampleSerial,
+    mouseWallMode: sim.mouseWallMode
+  }, [positionsPx.buffer, kineticColors.buffer, radii.buffer, typeIds.buffer]);
 }
 
 function runFrame() {
@@ -787,10 +888,114 @@ function startTimer() {
   timerId = setInterval(runFrame, 1000 / state.targetFps);
 }
 
+function resizeTypedArraysForParticles(sim, newCount) {
+  var newPositions = new Float32Array(newCount * 2);
+  var newVelocities = new Float32Array(newCount * 2);
+  var newForces = new Float32Array(newCount * 2);
+  var newTypeIds = new Int16Array(newCount);
+
+  newPositions.set(sim.positions);
+  newVelocities.set(sim.velocitiesHalf);
+  newForces.set(sim.forces);
+  newTypeIds.set(sim.typeIds);
+
+  sim.positions = newPositions;
+  sim.velocitiesHalf = newVelocities;
+  sim.forces = newForces;
+  sim.typeIds = newTypeIds;
+}
+
+function initializeOneParticleAt(sim, index, x, y, type) {
+  var margin = Math.pow(2, 1 / 6) * sim.typeSigma[type];
+  var minX = Math.min(margin, sim.boxWidth * 0.5);
+  var maxX = Math.max(minX, sim.boxWidth - margin);
+  var minY = Math.min(margin, sim.boxHeight * 0.5);
+  var maxY = Math.max(minY, sim.boxHeight - margin);
+  var std = Math.sqrt(KB_EV_PER_K * LJ_MD_INITIAL_TEMPERATURE_K / sim.typeMassFactors[type]);
+
+  sim.positions[2 * index] = Math.max(minX, Math.min(maxX, x));
+  sim.positions[2 * index + 1] = Math.max(minY, Math.min(maxY, y));
+  sim.velocitiesHalf[2 * index] = randomNormal() * std;
+  sim.velocitiesHalf[2 * index + 1] = randomNormal() * std;
+  sim.forces[2 * index] = 0;
+  sim.forces[2 * index + 1] = 0;
+  sim.typeIds[index] = type;
+}
+
+function positionHasRoom(sim, candidateX, candidateY, upto, type) {
+  var minDistance = 0.82 * sim.typeSigma[type];
+  var minDistance2 = minDistance * minDistance;
+
+  for (var i = 0; i < upto; i += 1) {
+    var dx = candidateX - sim.positions[2 * i];
+    var dy = candidateY - sim.positions[2 * i + 1];
+
+    if (dx * dx + dy * dy < minDistance2) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function addParticlesNear(sim, xPx, yPx) {
+  if (forceWorkerBusy) {
+    return;
+  }
+
+  var requested = Math.max(0, LJ_MD_CLICK_ADD_PARTICLE_COUNT | 0);
+  var addCount = Math.min(requested, Math.max(0, LJ_MD_MAX_PARTICLE_COUNT - sim.n));
+
+  if (addCount <= 0) {
+    return;
+  }
+
+  var oldCount = sim.n;
+  var newCount = oldCount + addCount;
+  var centerX = (xPx - sim.offsetX) / sim.scale;
+  var centerY = (yPx - sim.offsetY) / sim.scale;
+  var oldParallel = sim.useParallelForces;
+
+  resizeTypedArraysForParticles(sim, newCount);
+  sim.n = newCount;
+
+  for (var i = oldCount; i < newCount; i += 1) {
+    var type = chooseRandomType();
+    var placed = false;
+    var spread = Math.max(1.5, LJ_MD_MOUSE_WALL_RADIUS_ANGSTROM + LJ_MD_MOUSE_WALL_SOFTNESS_ANGSTROM);
+
+    for (var attempt = 0; attempt < 80; attempt += 1) {
+      var angle = Math.random() * Math.PI * 2;
+      var radius = Math.sqrt(Math.random()) * spread;
+      var x = centerX + Math.cos(angle) * radius;
+      var y = centerY + Math.sin(angle) * radius;
+
+      if (positionHasRoom(sim, x, y, i, type)) {
+        initializeOneParticleAt(sim, i, x, y, type);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      initializeOneParticleAt(sim, i, centerX, centerY, type);
+    }
+  }
+
+  sim.useParallelForces = shouldUseParallel(sim.n);
+
+  if (sim.useParallelForces !== oldParallel) {
+    setupForceWorkers(sim);
+  }
+
+  updateTemperatureScale(sim);
+  computeForces(sim, function() {});
+}
+
 function handleResize(sim, width, height) {
   var oldBoxWidth = sim.boxWidth;
   var oldBoxHeight = sim.boxHeight;
-  var box = boxFor(width, height);
+  var box = boxFor(width, height, sim.n);
   var vxWall = (box.width - oldBoxWidth) / Math.max(sim.dt, 1e-9);
   var vyWall = (box.height - oldBoxHeight) / Math.max(sim.dt, 1e-9);
 
@@ -836,6 +1041,27 @@ self.onmessage = function(event) {
       state.mouseX = (data.x - state.offsetX) / state.scale;
       state.mouseY = (data.y - state.offsetY) / state.scale;
     }
+  }
+
+  if (data.type === "addParticles" && state) {
+    addParticlesNear(state, data.x, data.y);
+  }
+
+  if (data.type === "toggleMouseWall" && state) {
+    state.mouseWallMode = state.mouseWallMode === "attractive" ? "repulsive" : "attractive";
+    state.mouseActive = true;
+    state.mouseX = (data.x - state.offsetX) / state.scale;
+    state.mouseY = (data.y - state.offsetY) / state.scale;
+  }
+
+  if (data.type === "adjustTemperature" && state) {
+    state.targetTemperatureK = Math.max(1, state.targetTemperatureK + data.deltaK);
+  }
+
+  if (data.type === "diagnostics" && state) {
+    state.needPressure = !!data.pressure;
+    state.needEnergy = !!data.energy;
+    updateTemperatureScale(state);
   }
 
   if (data.type === "start") {
