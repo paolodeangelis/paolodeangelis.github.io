@@ -1,7 +1,7 @@
 var USE_LJ_MD_ANIMATION = true;
 var LJ_MD_WORKER_VERSION = "2026-06-07-4000";
 var LJ_MD_RENDER_COLOR_MODE = "type"; // "type" or "kinetic".
-var LJ_MD_PARTICLE_ALPHA_MIN = 0.20;
+var LJ_MD_PARTICLE_ALPHA_MIN = 0.30;
 var LJ_MD_PARTICLE_ALPHA_MAX = 0.70;
 var LJ_MD_SHOW_PRESSURE = false;
 var LJ_MD_SHOW_ENERGY = false;
