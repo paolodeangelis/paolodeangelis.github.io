@@ -81,7 +81,7 @@ analytics:
 
 ### Optional heavy frontend assets ###
 mathjax:
-  enabled: true                                        # Page front matter can set mathjax: false.
+  enabled: false                                       # Set page front matter mathjax: true only on pages that need equations.
 
 github_buttons:
   enabled: false                                       # Enable only on pages that render GitHub button widgets.

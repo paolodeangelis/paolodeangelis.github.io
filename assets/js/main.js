@@ -297,12 +297,12 @@ function startLJAnimation() {
   function applyHudLayout() {
     if (isMobileViewport()) {
       diagnosticsReadout.style.right = "8px";
-      diagnosticsReadout.style.bottom = "8px";
+      diagnosticsReadout.style.bottom = "40px";
       diagnosticsReadout.style.fontSize = "10px";
       diagnosticsReadout.style.lineHeight = "1.18";
       diagnosticsReadout.style.maxWidth = "44vw";
       descriptionReadout.style.left = "8px";
-      descriptionReadout.style.bottom = "8px";
+      descriptionReadout.style.bottom = "40px";
       descriptionReadout.style.fontSize = "10px";
       descriptionReadout.style.lineHeight = "1.18";
       descriptionReadout.style.maxWidth = "42vw";

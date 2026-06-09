@@ -1,9 +1,11 @@
 .down-arrow {
     position: absolute;
     top: calc(99vh - 60px);
+    top: calc(100svh - 76px);
     left: calc(50% - 14px);
     width: 30px;
     height: 30px;
+    z-index: 3;
     cursor: pointer;
     animation: jumpInfinite 1.5s infinite;
   }

@@ -7,6 +7,80 @@ document.addEventListener('DOMContentLoaded', function() {
     const articleItems = Array.from(document.querySelectorAll('.article-item')); // Get all article items
     let currentView = 'card';
 
+    articleItems.forEach(item => {
+        const authorElement = item.querySelector('.article-author');
+        if (authorElement) {
+            authorElement.dataset.fullAuthorHtml = authorElement.innerHTML.trim();
+        }
+    });
+
+    function stripTags(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent || div.innerText || '';
+    }
+
+    function shortenAuthorHtml(html) {
+        const normalizedHtml = html.replace(/\s+/g, ' ').trim();
+        const text = stripTags(normalizedHtml).replace(/\s+/g, ' ').trim();
+        const authors = normalizedHtml.split(/\s*,\s*/).filter(author => author.length > 0);
+
+        if (authors.length <= 3 && text.length <= 90) {
+            return normalizedHtml;
+        }
+
+        const paoloIndex = authors.findIndex(author => stripTags(author).toLowerCase().includes('paolo de angelis'));
+
+        if (paoloIndex >= 0) {
+            if (paoloIndex < authors.length - 1) {
+                return authors.slice(0, paoloIndex + 1).join(', ') + ' et al.';
+            }
+            return normalizedHtml;
+        }
+
+        return authors[0] + ' et al.';
+    }
+
+    function updateAuthorDisplay() {
+        articleItems.forEach(item => {
+            const authorElement = item.querySelector('.article-author');
+            if (!authorElement || !authorElement.dataset.fullAuthorHtml) {
+                return;
+            }
+
+            authorElement.innerHTML = currentView === 'list' ?
+                shortenAuthorHtml(authorElement.dataset.fullAuthorHtml) :
+                authorElement.dataset.fullAuthorHtml;
+        });
+    }
+
+    function clearYearHeaders() {
+        articlesContainer.querySelectorAll('.article-year-group').forEach(header => header.remove());
+    }
+
+    function insertYearHeaders() {
+        clearYearHeaders();
+
+        if (currentView !== 'list') {
+            return;
+        }
+
+        let currentYear = null;
+        Array.from(articlesContainer.querySelectorAll('.article-item')).forEach(item => {
+            const year = item.getAttribute('data-year');
+
+            if (!year || year === currentYear) {
+                return;
+            }
+
+            currentYear = year;
+            const header = document.createElement('div');
+            header.className = 'article-year-group text-themed';
+            header.textContent = year;
+            articlesContainer.insertBefore(header, item);
+        });
+    }
+
     function applyViewMode() {
         if (currentView === 'list') {
             articlesContainer.classList.remove('card-columns');
@@ -19,6 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
             cardViewBtn.classList.add('active');
             listViewBtn.classList.remove('active');
         }
+
+        updateAuthorDisplay();
+        insertYearHeaders();
     }
 
     // Function to apply filtering and sorting

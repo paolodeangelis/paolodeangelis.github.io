@@ -23,16 +23,15 @@
   <link rel="shortcut icon" type="image/x-icon" href="{{ '/assets/favicon.ico' | relative_url }}">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://use.fontawesome.com" crossorigin>
 
   <!-- MATH -->
-  {%- assign mathjax_enabled = site.mathjax.enabled -%}
-  {%- if page.mathjax == false -%}
-    {%- assign mathjax_enabled = false -%}
-  {%- elsif page.mathjax == true -%}
+  {%- assign mathjax_enabled = false -%}
+  {%- if page.mathjax == true -%}
+    {%- assign mathjax_enabled = true -%}
+  {%- elsif site.mathjax.enabled == true and page.mathjax != false -%}
     {%- assign mathjax_enabled = true -%}
   {%- endif -%}
-  {%- if mathjax_enabled != false -%}
+  {%- if mathjax_enabled == true -%}
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM-CHTML"></script>
     <script defer src="{{ '/assets/js/math.js' | relative_url }}"></script>
   {%- endif -%}
@@ -43,11 +42,9 @@
   <script defer src="{{ '/assets/js/down_arrow.js' | relative_url }}"></script>
 
 
-  <!-- Font Awesome CDN -->
-  <link rel="preload" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"></noscript>
-
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/fontawesome.min.css" integrity="sha384-jLKHWM3JRmfMU0A5x5AkjWkw/EYfGUAGagvnfryNV3F9VqM98XiIH7VBGVoxVSc7" crossorigin="anonymous"> -->
+  <!-- Font Awesome -->
+  <link rel="preload" href="{{ '/assets/lib/fontawesome/css/all.min.css' | relative_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="{{ '/assets/lib/fontawesome/css/all.min.css' | relative_url }}"></noscript>
 
   <!-- Bootstrap CSS CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
