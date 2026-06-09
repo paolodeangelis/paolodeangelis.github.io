@@ -31,11 +31,28 @@
   {%- assign mathjax_enabled = false -%}
   {%- if page.mathjax == true -%}
     {%- assign mathjax_enabled = true -%}
+  {%- elsif page.layout == 'articles_page' and page.mathjax != false -%}
+    {%- assign math_articles = site.articles | where: 'mathjax', true -%}
+    {%- if math_articles.size > 0 -%}
+      {%- assign mathjax_enabled = true -%}
+    {%- endif -%}
   {%- elsif site.mathjax.enabled == true and page.mathjax != false -%}
     {%- assign mathjax_enabled = true -%}
   {%- endif -%}
   {%- if mathjax_enabled == true -%}
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM-CHTML"></script>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [['$$','$$'], ['\\[','\\]']],
+          processEscapes: true
+        },
+        startup: {
+          typeset: false
+        }
+      };
+    </script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
     <script defer src="{{ '/assets/js/math.js' | relative_url }}"></script>
   {%- endif -%}
 

@@ -96,6 +96,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
         updateAuthorDisplay();
         insertYearHeaders();
+        bindAbstractMathTypeset();
+        requestMathTypeset();
+    }
+
+    function requestMathTypeset() {
+        if (typeof window.typesetMath !== 'function') {
+            return;
+        }
+
+        window.typesetMath(articlesContainer);
+    }
+
+    function bindAbstractMathTypeset() {
+        articlesContainer.querySelectorAll('.abstract-trigger').forEach(trigger => {
+            if (trigger.dataset.mathTypesetBound === 'true') {
+                return;
+            }
+
+            trigger.dataset.mathTypesetBound = 'true';
+            ['mouseenter', 'focus'].forEach(eventName => {
+                trigger.addEventListener(eventName, function() {
+                    const abstract = trigger.closest('.article-abstract');
+                    const preview = abstract ? abstract.querySelector('.abstract-preview') : null;
+
+                    if (!preview || preview.dataset.mathTypesetDone === 'true' || typeof window.typesetMath !== 'function') {
+                        return;
+                    }
+
+                    window.typesetMath(preview).then(function() {
+                        preview.dataset.mathTypesetDone = 'true';
+                    });
+                });
+            });
+        });
     }
 
     // Function to apply filtering and sorting

@@ -43,9 +43,9 @@
                 <span class="abstract-trigger" tabindex="0" aria-describedby="{{ article_id }}-abstract-preview">
                     Abstract <i class="fas fa-info-circle" aria-hidden="true"></i>
                 </span>
-                <span id="{{ article_id }}-abstract-preview" class="abstract-preview" role="tooltip">
-                    {{ article_abstract }}
-                </span>
+                <div id="{{ article_id }}-abstract-preview" class="abstract-preview" role="tooltip">
+                    {{ article_abstract | markdownify }}
+                </div>
             </div>
 
             <p id="{{ article_id }}-keywords" class="card-text article-keywords">

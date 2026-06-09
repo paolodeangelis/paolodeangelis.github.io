@@ -19,12 +19,12 @@ dribbble:
 email:
   url   : "mailto:"
   icon  : fas fa-envelope
-  color : db4437
+  color : 24B1B1
 
 facebook:
   url   : https://www.facebook.com/
   icon  : fab fa-facebook
-  color : 3b5998
+  color : 1877F2
 
 github:
   url   : https://www.github.com/
@@ -39,7 +39,7 @@ gitlab:
 instagram:
   url   : https://www.instagram.com/
   icon  : fab fa-instagram
-  color : 405de6
+  color : C13584
 
 kaggle:
   url   : https://www.kaggle.com/
@@ -49,7 +49,7 @@ kaggle:
 linkedin:
   url   : https://www.linkedin.com/in/
   icon  : fab fa-linkedin-in
-  color : 007bb5
+  color : 0077B5
 
 medium:
   url   : https://medium.com/@
@@ -85,6 +85,11 @@ twitter:
   url   : https://www.twitter.com/
   icon  : fab fa-twitter
   color : 1da1f2
+
+x-twitter:
+  url   : https://www.x.com/
+  icon  : fab fa-x-twitter
+  color : 090909
 
 vimeo:
   url   : https://www.vimeo.com/
