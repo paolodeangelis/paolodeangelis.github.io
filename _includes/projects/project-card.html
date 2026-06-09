@@ -5,9 +5,14 @@
   <a href="{{ project_url }}" class="project card cart-gnome text-themed" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
   {%- else -%}
   <a href="{{ project_url }}" class="project card text-themed" {%- if external and site.open_new_tab -%} target="_blank" {%- endif -%}>
-  {%- endif -%}
+    {%- endif -%}
     {%- if project_img -%}
-      <img id="{{ project_id }}-img" class="project card-img-top" src="{{ project_img }}" alt="{{ project_name }}" />
+      {%
+        include elements/responsive-image.html
+        src=project_img
+        class="project card-img-top"
+        alt=project_name
+      %}
     {%- endif -%}
     <div class="card-body">
       <h4 id="{{ project_id }}-name" class="card-title">

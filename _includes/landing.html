@@ -8,7 +8,16 @@
   <div id="container1" class="my-2">
   <!-- <div id="dummy"></div> -->
     <div id="element">
-    <img src="{{ site.author.image }}" alt="{{ site.title }}" class="circle-image" width="350" height="350" fetchpriority="high" decoding="async">
+    {%
+      include elements/responsive-image.html
+      src=site.author.image
+      alt=site.title
+      class="circle-image"
+      width="350"
+      height="350"
+      loading="eager"
+      fetchpriority="high"
+    %}
 
 
 

@@ -1,6 +1,15 @@
 var USE_LJ_MD_ANIMATION = true;
 var LJ_MD_WORKER_VERSION = "2026-06-07-4000";
 var LJ_MD_RENDER_COLOR_MODE = "type"; // "type" or "kinetic".
+var LJ_MD_MOBILE_BREAKPOINT_PX = 640;
+var LJ_MD_MOBILE_HELP_PROMPT_TEXT = "LJ MD | desktop recommended";
+var LJ_MD_MOBILE_PARTICLE_CAP = 260;
+var LJ_MD_MOBILE_TARGET_FPS = 14;
+var LJ_MD_MOBILE_STEPS_PER_FRAME = 3;
+var LJ_MD_ADAPTIVE_QUALITY_ENABLED = true;
+var LJ_MD_ADAPTIVE_FALLBACK_ENABLED = true;
+var LJ_MD_ADAPTIVE_SLOW_FRAME_MS = 95;
+var LJ_MD_ADAPTIVE_SLOW_FRAME_LIMIT = 10;
 var LJ_MD_PARTICLE_ALPHA_MIN = 0.30;
 var LJ_MD_PARTICLE_ALPHA_MAX = 0.70;
 var LJ_MD_SHOW_PRESSURE = false;
@@ -15,10 +24,50 @@ var LJ_MD_GRAPH_HEIGHT_PX = 52;
 var LJ_MD_HELP_PROMPT_TEXT = "LJ MD | press h for help";
 var LJ_MD_TYPE_COLORS_DARK = ["#f8f8f2", "#49eeba", "#e6455d", "#2a67eb", "#f154f7"];
 var LJ_MD_TYPE_COLORS_LIGHT = ["#1a222c", "#22806b", "#c43855", "#134cc5", "#ca27cf"];
+var particlesFallbackLoading = false;
+
+function currentScriptUrl() {
+  var script = document.querySelector('script[src*="/assets/js/main.js"], script[src$="assets/js/main.js"]');
+
+  return script ? script.src : null;
+}
+
+function assetUrl(fileName) {
+  var scriptUrl = currentScriptUrl();
+
+  if (!scriptUrl || !window.URL) {
+    return fileName;
+  }
+
+  return new URL(fileName, scriptUrl).toString();
+}
 
 function startParticlesFallback() {
   if (typeof particlesJS !== "function") {
+    if (particlesFallbackLoading) {
+      return;
+    }
+
+    particlesFallbackLoading = true;
+    var fallbackScript = document.createElement("script");
+    fallbackScript.defer = true;
+    fallbackScript.src = assetUrl("particles.min.js");
+    fallbackScript.onload = function() {
+      particlesFallbackLoading = false;
+      startParticlesFallback();
+    };
+    fallbackScript.onerror = function() {
+      particlesFallbackLoading = false;
+    };
+    document.head.appendChild(fallbackScript);
     return;
+  }
+
+  var root = document.getElementById("particles-js");
+  if (root) {
+    while (root.firstChild) {
+      root.removeChild(root.firstChild);
+    }
   }
 
   particlesJS("particles-js", {
@@ -135,9 +184,8 @@ function startParticlesFallback() {
 
 function startLJAnimation() {
   var root = document.getElementById("particles-js");
-  var script = document.querySelector('script[src*="/assets/js/main.js"], script[src$="assets/js/main.js"]');
 
-  if (!root || !script || !window.Worker || !window.URL) {
+  if (!root || !currentScriptUrl() || !window.Worker || !window.URL) {
     startParticlesFallback();
     return;
   }
@@ -158,10 +206,14 @@ function startLJAnimation() {
     return;
   }
 
-  var worker = new Worker(new URL("lj-md-worker.js?v=" + encodeURIComponent(LJ_MD_WORKER_VERSION), script.src));
+  var worker = new Worker(assetUrl("lj-md-worker.js?v=" + encodeURIComponent(LJ_MD_WORKER_VERSION)));
   var latestFrame = null;
   var renderPending = false;
   var resizeTimer = null;
+  var lastFrameTime = 0;
+  var slowFrameCount = 0;
+  var adaptiveLevel = 0;
+  var fallbackActivated = false;
   var diagnosticsReadout = document.createElement("div");
   var descriptionReadout = document.createElement("div");
   var graphCanvas = document.createElement("canvas");
@@ -192,7 +244,8 @@ function startLJAnimation() {
   diagnosticsReadout.style.pointerEvents = "none";
   diagnosticsReadout.style.opacity = "0.76";
   diagnosticsReadout.style.padding = LJ_MD_HUD_PADDING_PX + "px";
-  diagnosticsReadout.style.whiteSpace = "pre";
+  diagnosticsReadout.style.whiteSpace = "pre-wrap";
+  diagnosticsReadout.style.maxWidth = "46vw";
   descriptionReadout.className = "lj-md-description-readout";
   descriptionReadout.style.position = "absolute";
   descriptionReadout.style.left = "12px";
@@ -204,7 +257,8 @@ function startLJAnimation() {
   descriptionReadout.style.pointerEvents = "none";
   descriptionReadout.style.opacity = "0.76";
   descriptionReadout.style.padding = LJ_MD_HUD_PADDING_PX + "px";
-  descriptionReadout.style.whiteSpace = "pre";
+  descriptionReadout.style.whiteSpace = "pre-wrap";
+  descriptionReadout.style.maxWidth = "46vw";
   descriptionReadout.textContent = LJ_MD_HELP_PROMPT_TEXT;
   graphCanvas.width = LJ_MD_GRAPH_WIDTH_PX;
   graphCanvas.height = LJ_MD_GRAPH_HEIGHT_PX * 3 + 18;
@@ -214,11 +268,66 @@ function startLJAnimation() {
   root.appendChild(descriptionReadout);
   diagnosticsReadout.appendChild(graphCanvas);
 
+  function isMobileViewport() {
+    return root.getBoundingClientRect().width <= LJ_MD_MOBILE_BREAKPOINT_PX;
+  }
+
+  function initialQualitySettings() {
+    if (!isMobileViewport()) {
+      return null;
+    }
+
+    return {
+      maxParticles: LJ_MD_MOBILE_PARTICLE_CAP,
+      targetFps: LJ_MD_MOBILE_TARGET_FPS,
+      stepsPerFrame: LJ_MD_MOBILE_STEPS_PER_FRAME
+    };
+  }
+
+  function graphWidth() {
+    var rootWidth = root.getBoundingClientRect().width || LJ_MD_GRAPH_WIDTH_PX;
+
+    if (rootWidth <= LJ_MD_MOBILE_BREAKPOINT_PX) {
+      return Math.max(130, Math.min(LJ_MD_GRAPH_WIDTH_PX, Math.floor(rootWidth * 0.45)));
+    }
+
+    return LJ_MD_GRAPH_WIDTH_PX;
+  }
+
+  function applyHudLayout() {
+    if (isMobileViewport()) {
+      diagnosticsReadout.style.right = "8px";
+      diagnosticsReadout.style.bottom = "8px";
+      diagnosticsReadout.style.fontSize = "10px";
+      diagnosticsReadout.style.lineHeight = "1.18";
+      diagnosticsReadout.style.maxWidth = "44vw";
+      descriptionReadout.style.left = "8px";
+      descriptionReadout.style.bottom = "8px";
+      descriptionReadout.style.fontSize = "10px";
+      descriptionReadout.style.lineHeight = "1.18";
+      descriptionReadout.style.maxWidth = "42vw";
+    } else {
+      diagnosticsReadout.style.right = "12px";
+      diagnosticsReadout.style.bottom = "12px";
+      diagnosticsReadout.style.fontSize = "12px";
+      diagnosticsReadout.style.lineHeight = "1.25";
+      diagnosticsReadout.style.maxWidth = "46vw";
+      descriptionReadout.style.left = "12px";
+      descriptionReadout.style.bottom = "12px";
+      descriptionReadout.style.fontSize = "12px";
+      descriptionReadout.style.lineHeight = "1.25";
+      descriptionReadout.style.maxWidth = "46vw";
+    }
+  }
+
   function sizeCanvas() {
     var ratio = Math.min(window.devicePixelRatio || 1, 2);
     var rect = root.getBoundingClientRect();
     var width = Math.max(320, Math.floor(rect.width * ratio));
     var height = Math.max(320, Math.floor(rect.height * ratio));
+
+    applyHudLayout();
+    updateHelpText();
 
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
@@ -337,6 +446,16 @@ function startLJAnimation() {
     return value.toFixed(digits) + suffix;
   }
 
+  function formatSimulationTime(frame) {
+    var timePs = typeof frame.timePs === "number" && isFinite(frame.timePs) ? frame.timePs : 0;
+
+    if (timePs >= 1000) {
+      return "time = " + (timePs / 1000).toFixed(3) + " ns";
+    }
+
+    return "time = " + timePs.toFixed(1) + " ps";
+  }
+
   function activeMetrics(frame) {
     var metrics = [];
 
@@ -380,6 +499,11 @@ function startLJAnimation() {
   }
 
   function updateHelpText() {
+    if (isMobileViewport()) {
+      descriptionReadout.textContent = LJ_MD_MOBILE_HELP_PROMPT_TEXT;
+      return;
+    }
+
     if (!helpVisible) {
       descriptionReadout.textContent = LJ_MD_HELP_PROMPT_TEXT;
       return;
@@ -479,13 +603,13 @@ function startLJAnimation() {
       graphCanvas.style.display = "none";
       diagnosticsReadout.textContent = metrics.map(function(metric) {
         return metric.text;
-      }).concat("mouse = " + (frame.mouseWallMode === "attractive" ? "attract" : "repel")).join("\n");
+      }).concat(formatSimulationTime(frame)).join("\n");
       return;
     }
 
     diagnosticsReadout.textContent = "";
     graphCanvas.style.display = "block";
-    graphCanvas.width = LJ_MD_GRAPH_WIDTH_PX;
+    graphCanvas.width = graphWidth();
     graphCanvas.height = Math.max(1, metrics.length) * LJ_MD_GRAPH_HEIGHT_PX + 18;
     diagnosticsReadout.appendChild(graphCanvas);
 
@@ -501,8 +625,64 @@ function startLJAnimation() {
     graphCtx.fillStyle = readoutColor();
     graphCtx.font = "12px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace";
     graphCtx.textAlign = "right";
-    graphCtx.fillText(frame.mouseWallMode === "attractive" ? "mouse attract" : "mouse repel", graphCanvas.width - 2, graphCanvas.height - 4);
+    graphCtx.fillText(formatSimulationTime(frame), graphCanvas.width - 2, graphCanvas.height - 4);
     graphCtx.textAlign = "left";
+  }
+
+  function stepDownQuality() {
+    if (!LJ_MD_ADAPTIVE_QUALITY_ENABLED || adaptiveLevel >= 3 || fallbackActivated) {
+      if (LJ_MD_ADAPTIVE_FALLBACK_ENABLED && adaptiveLevel >= 3 && !fallbackActivated) {
+        fallbackActivated = true;
+        worker.terminate();
+        startParticlesFallback();
+      }
+      return;
+    }
+
+    adaptiveLevel += 1;
+
+    if (adaptiveLevel === 1) {
+      worker.postMessage({
+        type: "setQuality",
+        targetFps: Math.max(10, Math.floor(LJ_MD_MOBILE_TARGET_FPS)),
+        stepsPerFrame: Math.max(2, Math.floor(LJ_MD_MOBILE_STEPS_PER_FRAME))
+      });
+    } else if (adaptiveLevel === 2) {
+      worker.postMessage({
+        type: "setQuality",
+        targetFps: 10,
+        stepsPerFrame: 2,
+        maxParticles: Math.max(120, LJ_MD_MOBILE_PARTICLE_CAP)
+      });
+    } else {
+      worker.postMessage({
+        type: "setQuality",
+        targetFps: 8,
+        stepsPerFrame: 1,
+        maxParticles: Math.max(100, Math.floor(LJ_MD_MOBILE_PARTICLE_CAP * 0.75))
+      });
+    }
+  }
+
+  function observeFrameRate() {
+    if (!LJ_MD_ADAPTIVE_QUALITY_ENABLED || fallbackActivated) {
+      return;
+    }
+
+    var now = performance.now();
+
+    if (lastFrameTime > 0 && now - lastFrameTime > LJ_MD_ADAPTIVE_SLOW_FRAME_MS) {
+      slowFrameCount += 1;
+    } else {
+      slowFrameCount = Math.max(0, slowFrameCount - 1);
+    }
+
+    lastFrameTime = now;
+
+    if (slowFrameCount >= LJ_MD_ADAPTIVE_SLOW_FRAME_LIMIT) {
+      slowFrameCount = 0;
+      stepDownQuality();
+    }
   }
 
   function alphaFor(value) {
@@ -596,6 +776,7 @@ function startLJAnimation() {
 
   worker.onmessage = function(event) {
     if (event.data.type === "frame") {
+      observeFrameRate();
       latestFrame = event.data;
       requestRender();
     }
@@ -707,7 +888,8 @@ function startLJAnimation() {
   worker.postMessage({
     type: "start",
     width: canvas.width,
-    height: canvas.height
+    height: canvas.height,
+    quality: initialQualitySettings()
   });
   sendDiagnosticsRequest();
 }

@@ -13,6 +13,10 @@
     object-fit: cover; // Ensure image covers the area, cropping if necessary
   }
 
+  picture {
+    display: block;
+  }
+
   .badge-keywords {
     color: #6ECCAF;
     border-color: #6ECCAF;
@@ -88,16 +92,22 @@
       }
     }
 
+    .article.card > picture {
+      display: block;
+      flex-shrink: 0;
+      width: 150px;
+      min-height: 190px;
+    }
+
     // List view image styling (image on left, fixed height, cropped from left)
    .article-image { // This targets the .card-img-top.article-image when in list mode
       display: block; // Ensures image behaves as a block element within flex container
-      width: 150px; // Fixed width for the image
-      // height: 100%; // Image height now takes 100% of its parent's height (which adapts to text or min-height)
+      width: 100%;
+      height: 100%;
       min-height: 190px;
       object-fit: cover !important; // IMPORTANT: Force image to cover, cropping if necessary
       object-position: left !important; // IMPORTANT: Force cropping from the left
       // margin-right: 1.5rem; // Space between image and text content
-      flex-shrink: 0; // Prevent the image from shrinking
       border-radius: $rounded-borders 0 0 $rounded-borders; // Top-left and bottom-left rounded, others square
 
     }
@@ -135,18 +145,42 @@
 
  /* Responsive adjustments for smaller screens in list view */
     @media (max-width: 900px) {
-      .article.card { // The inner card stacks vertically on small screens
-        flex-direction: column;
+      margin-bottom: 0.55rem;
+      box-shadow: none;
+
+      .article.card {
+        flex-direction: row;
         align-items: flex-start; // Align content to the left
         text-align: left; // Ensure text is left-aligned
       }
 
+      .article.card > picture {
+        display: none;
+      }
+
       .article-image {
-        display: none; // NEW: Hides the image completely on small screens
+        display: none;
       }
 
       .card-body {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
         align-items: flex-start; // Align text content to the left when stacked
+      }
+
+      .article-title {
+        font-size: 1.02em;
+        margin-bottom: 0.35rem;
+      }
+
+      .article-author,
+      .article-journal,
+      .article-year {
+        font-size: 0.82em;
+      }
+
+      .article-keywords {
+        display: none;
       }
     }
   }

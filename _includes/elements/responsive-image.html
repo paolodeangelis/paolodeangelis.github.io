@@ -1,0 +1,40 @@
+{%- assign image_src = include.src | default: include.image -%}
+{%- assign first_char = image_src | slice: 0 -%}
+{%- if first_char == '/' -%}
+  {%- assign image_src = image_src | remove_first: '/' -%}
+{%- endif -%}
+{%- assign image_base = image_src
+  | replace: '.jpeg', ''
+  | replace: '.jpg', ''
+  | replace: '.png', ''
+-%}
+{%- assign avif_src = image_base | append: '.avif' -%}
+{%- assign webp_src = image_base | append: '.webp' -%}
+{%- assign avif_path = '/' | append: avif_src -%}
+{%- assign webp_path = '/' | append: webp_src -%}
+{%- assign has_avif = false -%}
+{%- assign has_webp = false -%}
+{%- for file in site.static_files -%}
+  {%- if file.path == avif_path -%}
+    {%- assign has_avif = true -%}
+  {%- elsif file.path == webp_path -%}
+    {%- assign has_webp = true -%}
+  {%- endif -%}
+{%- endfor -%}
+<picture>
+  {%- if has_avif -%}
+    <source srcset="{{ avif_src | relative_url }}" type="image/avif">
+  {%- endif -%}
+  {%- if has_webp -%}
+    <source srcset="{{ webp_src | relative_url }}" type="image/webp">
+  {%- endif -%}
+  <img
+    src="{{ image_src | relative_url }}"
+    class="{{ include.class }}"
+    alt="{{ include.alt | default: '' }}"
+    {%- if include.width %} width="{{ include.width }}"{% endif %}
+    {%- if include.height %} height="{{ include.height }}"{% endif %}
+    loading="{{ include.loading | default: 'lazy' }}"
+    decoding="{{ include.decoding | default: 'async' }}"
+    {%- if include.fetchpriority %} fetchpriority="{{ include.fetchpriority }}"{% endif -%}>
+</picture>

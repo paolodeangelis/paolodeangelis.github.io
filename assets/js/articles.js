@@ -5,6 +5,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const articleSearch = document.getElementById('article-search');
     const articleSort = document.getElementById('article-sort');
     const articleItems = Array.from(document.querySelectorAll('.article-item')); // Get all article items
+    let currentView = 'card';
+
+    function applyViewMode() {
+        if (currentView === 'list') {
+            articlesContainer.classList.remove('card-columns');
+            articlesContainer.classList.add('articles-list');
+            cardViewBtn.classList.remove('active');
+            listViewBtn.classList.add('active');
+        } else {
+            articlesContainer.classList.add('card-columns');
+            articlesContainer.classList.remove('articles-list');
+            cardViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+        }
+    }
 
     // Function to apply filtering and sorting
     function applyFiltersAndSort() {
@@ -65,24 +80,22 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             filteredArticles.forEach(item => articlesContainer.appendChild(item));
         }
+
+        applyViewMode();
     }
 
     // View switching functionality
     cardViewBtn.addEventListener('click', function() {
-        articlesContainer.classList.add('card-columns');
-        articlesContainer.classList.remove('articles-list');
-        cardViewBtn.classList.add('active');
-        listViewBtn.classList.remove('active');
+        currentView = 'card';
+        applyViewMode();
         // Ensure articles are displayed correctly after view change
         // No need to re-run applyFiltersAndSort here, as the CSS classes handle layout.
         // If content disappears, you might need to re-append, but usually not.
     });
 
     listViewBtn.addEventListener('click', function() {
-        articlesContainer.classList.remove('card-columns');
-        articlesContainer.classList.add('articles-list');
-        cardViewBtn.classList.remove('active');
-        listViewBtn.classList.add('active');
+        currentView = 'list';
+        applyViewMode();
         // No need to re-run applyFiltersAndSort here.
     });
 

@@ -19,7 +19,16 @@ jobs:
       - name: Install image optimization tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y jpegoptim optipng
+          sudo apt-get install -y jpegoptim optipng webp libavif-bin
+
+      - name: Generate WebP and AVIF files
+        shell: bash
+        run: |
+          while IFS= read -r -d '' image; do
+            base="${image%.*}"
+            cwebp -quiet -q 82 "$image" -o "${base}.webp"
+            avifenc --min 28 --max 36 --speed 6 "$image" "${base}.avif"
+          done < <(find img assets -type f -size +16k \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) -print0)
 
       - name: Optimize JPEG files
         run: |

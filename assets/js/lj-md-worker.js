@@ -105,6 +105,34 @@ var state = null;
 var timerId = null;
 var forceWorkers = [];
 var forceWorkerBusy = false;
+var LJ_MD_ACTIVE_MAX_PARTICLE_COUNT = LJ_MD_MAX_PARTICLE_COUNT;
+
+function applyQualitySettings(settings) {
+  if (!settings) {
+    return;
+  }
+
+  if (typeof settings.maxParticles === "number" && isFinite(settings.maxParticles)) {
+    LJ_MD_ACTIVE_MAX_PARTICLE_COUNT = Math.max(1, Math.min(LJ_MD_MAX_PARTICLE_COUNT, Math.floor(settings.maxParticles)));
+  }
+
+  if (typeof settings.stepsPerFrame === "number" && isFinite(settings.stepsPerFrame)) {
+    LJ_MD_STEPS_PER_FRAME = Math.max(1, Math.min(20, Math.floor(settings.stepsPerFrame)));
+
+    if (state) {
+      state.stepsPerFrame = LJ_MD_STEPS_PER_FRAME;
+    }
+  }
+
+  if (typeof settings.targetFps === "number" && isFinite(settings.targetFps)) {
+    LJ_MD_TARGET_FPS = Math.max(4, Math.min(60, Math.floor(settings.targetFps)));
+
+    if (state) {
+      state.targetFps = LJ_MD_TARGET_FPS;
+      startTimer();
+    }
+  }
+}
 
 function randomNormal() {
   var u = 0;
@@ -356,9 +384,10 @@ function setupForceWorkers(sim) {
 }
 
 function createState(width, height) {
-  var box = boxFor(width, height, LJ_MD_PARTICLE_COUNT);
+  var initialParticleCount = Math.min(LJ_MD_PARTICLE_COUNT, LJ_MD_ACTIVE_MAX_PARTICLE_COUNT);
+  var box = boxFor(width, height, initialParticleCount);
   var sim = {
-    n: LJ_MD_PARTICLE_COUNT,
+    n: initialParticleCount,
     widthPx: width,
     heightPx: height,
     boxWidth: box.width,
@@ -371,7 +400,7 @@ function createState(width, height) {
     stepsPerFrame: LJ_MD_STEPS_PER_FRAME,
     targetFps: LJ_MD_TARGET_FPS,
     workerCount: Math.max(1, LJ_MD_WORKER_COUNT),
-    useParallelForces: shouldUseParallel(LJ_MD_PARTICLE_COUNT),
+    useParallelForces: shouldUseParallel(initialParticleCount),
     resizeKickAps: LJ_MD_RESIZE_KICK_A_PER_PS,
     stepCount: 0,
     sampleSerial: 0,
@@ -393,10 +422,10 @@ function createState(width, height) {
     mouseWallMode: LJ_MD_MOUSE_WALL_INITIAL_MODE === "attractive" ? "attractive" : "repulsive",
     mouseX: 0,
     mouseY: 0,
-    positions: new Float32Array(LJ_MD_PARTICLE_COUNT * 2),
-    velocitiesHalf: new Float32Array(LJ_MD_PARTICLE_COUNT * 2),
-    forces: new Float32Array(LJ_MD_PARTICLE_COUNT * 2),
-    typeIds: new Int16Array(LJ_MD_PARTICLE_COUNT)
+    positions: new Float32Array(initialParticleCount * 2),
+    velocitiesHalf: new Float32Array(initialParticleCount * 2),
+    forces: new Float32Array(initialParticleCount * 2),
+    typeIds: new Int16Array(initialParticleCount)
   };
 
   buildTypeTables(sim);
@@ -1005,7 +1034,8 @@ function emitFrame(sim) {
     totalEnergyEv: sim.needEnergy ? sim.totalEnergyEv : null,
     targetTemperatureK: sim.targetTemperatureK,
     sampleSerial: sim.sampleSerial,
-    mouseWallMode: sim.mouseWallMode
+    mouseWallMode: sim.mouseWallMode,
+    timePs: sim.stepCount * sim.dt
   }, [positionsPx.buffer, kineticColors.buffer, radii.buffer, typeIds.buffer]);
 }
 
@@ -1083,7 +1113,7 @@ function addParticlesNear(sim, xPx, yPx) {
   }
 
   var requested = Math.max(0, LJ_MD_CLICK_ADD_PARTICLE_COUNT | 0);
-  var addCount = Math.min(requested, Math.max(0, LJ_MD_MAX_PARTICLE_COUNT - sim.n));
+  var addCount = Math.min(requested, Math.max(0, LJ_MD_ACTIVE_MAX_PARTICLE_COUNT - sim.n));
 
   if (addCount <= 0) {
     return;
@@ -1203,7 +1233,12 @@ self.onmessage = function(event) {
     updateTemperatureScale(state);
   }
 
+  if (data.type === "setQuality") {
+    applyQualitySettings(data);
+  }
+
   if (data.type === "start") {
+    applyQualitySettings(data.quality);
     state = createState(data.width || 1200, data.height || 800);
     startTimer();
   }
