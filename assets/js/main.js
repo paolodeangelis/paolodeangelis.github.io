@@ -894,12 +894,33 @@ function startLJAnimation() {
   sendDiagnosticsRequest();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  new SweetScroll({});
+function startHomeAnimationWhenIdle() {
+  var startAnimation = function() {
+    if (USE_LJ_MD_ANIMATION) {
+      startLJAnimation();
+    } else {
+      startParticlesFallback();
+    }
+  };
 
-  if (USE_LJ_MD_ANIMATION) {
-    startLJAnimation();
-  } else {
-    startParticlesFallback();
+  if (!document.getElementById("particles-js")) {
+    return;
   }
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(startAnimation, { timeout: 1500 });
+    return;
+  }
+
+  window.setTimeout(startAnimation, 300);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof SweetScroll === "function") {
+    new SweetScroll({});
+  }
+
+  window.requestAnimationFrame(function() {
+    window.requestAnimationFrame(startHomeAnimationWhenIdle);
+  });
 }, false);

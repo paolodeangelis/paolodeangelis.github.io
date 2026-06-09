@@ -3,21 +3,14 @@
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 {%- endif -%}
 
-<!-- jQuery CDN -->
-<script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-<!-- Popper.js CDN -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
-
-<!-- Bootstrap JS CDN -->
-<script defer src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-
-<!-- wow.js CDN & Activation -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<!-- Local Bootstrap runtime dependencies -->
+<script defer src="{{ '/assets/lib/jquery/jquery-3.5.1.slim.min.js' | relative_url }}"></script>
+<script defer src="{{ '/assets/lib/bootstrap/js/bootstrap.bundle.min.js' | relative_url }}"></script>
+<script defer src="{{ '/assets/lib/wow/wow.min.js' | relative_url }}"></script>
 <script defer src="{{ '/assets/js/sweet-scroll.min.js' | prepend: site.baseurl }}"></script>
 <script defer src="{{ '/assets/js/main.js' | prepend: site.baseurl }}"></script>
 
-<!-- Initialize all tooltips -->
+<!-- Initialize local UI helpers. -->
 <script defer>
 window.addEventListener('DOMContentLoaded', function () {
   if (window.WOW) {

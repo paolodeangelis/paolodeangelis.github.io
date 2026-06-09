@@ -22,8 +22,38 @@ $site-iosevka-font-weights: (
   900: "Heavy"
 );
 
+$site-active-heading-font-weights: (
+  400: "Regular",
+  600: "SemiBold",
+  700: "Bold"
+);
+
+$site-active-heading-italic-font-weights: (
+  400: "Regular"
+);
+
+$site-active-term-font-weights: (
+  400: "Regular",
+  600: "SemiBold",
+  700: "Bold"
+);
+
 @mixin site-font-face($family, $folder, $file-prefix, $style: normal, $italic-suffix: "Italic") {
   @each $weight, $weight-name in $site-font-weights {
+    $suffix: if($style == italic and $weight-name == "Regular", $italic-suffix, "#{$weight-name}#{$italic-suffix}");
+
+    @font-face {
+      font-family: $family;
+      src: url("../fonts/#{$folder}/woff2/#{$file-prefix}-#{$suffix}.woff2") format("woff2");
+      font-weight: $weight;
+      font-style: $style;
+      font-display: swap;
+    }
+  }
+}
+
+@mixin site-font-face-with-weights($family, $folder, $file-prefix, $weights, $style: normal, $italic-suffix: "Italic") {
+  @each $weight, $weight-name in $weights {
     $suffix: if($style == italic and $weight-name == "Regular", $italic-suffix, "#{$weight-name}#{$italic-suffix}");
 
     @font-face {
@@ -48,17 +78,22 @@ $site-iosevka-font-weights: (
   }
 }
 
-@include site-font-face("SiteMontserrat", "montserrat", "Montserrat", normal, "");
-@include site-font-face("SiteMontserrat", "montserrat", "Montserrat", italic, "Italic");
-@include site-font-face("SitePoppins", "poppins", "Poppins", normal, "");
-@include site-font-face("SitePoppins", "poppins", "Poppins", italic, "Italic");
-@include site-font-face("SiteRoboto", "roboto", "Roboto", normal, "");
-@include site-font-face("SiteRoboto", "roboto", "Roboto", italic, "Italic");
-@include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", normal, "");
-@include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", italic, "Italic");
-@include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", normal, "");
-@include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", italic, "Italic");
-@include site-upright-font-face("SiteIosevkaTerm", "iosevka-term", "SGr-IosevkaTerm", $site-iosevka-font-weights);
+@include site-font-face-with-weights("SiteMontserrat", "montserrat", "Montserrat", $site-active-heading-font-weights, normal, "");
+@include site-font-face-with-weights("SiteMontserrat", "montserrat", "Montserrat", $site-active-heading-italic-font-weights, italic, "Italic");
+@include site-upright-font-face("SiteIosevkaTerm", "iosevka-term", "SGr-IosevkaTerm", $site-active-term-font-weights);
+
+// Optional font families. Keep these definitions commented so future font-pair tests only need uncommenting.
+// @include site-font-face("SiteMontserrat", "montserrat", "Montserrat", normal, "");
+// @include site-font-face("SiteMontserrat", "montserrat", "Montserrat", italic, "Italic");
+// @include site-font-face("SitePoppins", "poppins", "Poppins", normal, "");
+// @include site-font-face("SitePoppins", "poppins", "Poppins", italic, "Italic");
+// @include site-font-face("SiteRoboto", "roboto", "Roboto", normal, "");
+// @include site-font-face("SiteRoboto", "roboto", "Roboto", italic, "Italic");
+// @include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", normal, "");
+// @include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", italic, "Italic");
+// @include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", normal, "");
+// @include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", italic, "Italic");
+// @include site-upright-font-face("SiteIosevkaTerm", "iosevka-term", "SGr-IosevkaTerm", $site-iosevka-font-weights);
 
 :root {
   --font-sans: "SiteMontserrat", sans-serif;
