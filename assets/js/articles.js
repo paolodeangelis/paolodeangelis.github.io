@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             currentYear = year;
             const header = document.createElement('div');
-            header.className = 'article-year-group text-themed';
+            header.className = 'article-year-group';
             header.textContent = year;
             articlesContainer.insertBefore(header, item);
         });

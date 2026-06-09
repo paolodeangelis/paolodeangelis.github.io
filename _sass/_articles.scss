@@ -17,10 +17,85 @@
     display: block;
   }
 
+  .card-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .article-abstract {
+    position: relative;
+    align-self: center;
+    margin: 0.15rem 0 0.85rem;
+    text-align: center;
+  }
+
+  .article-abstract::before {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    z-index: 19;
+    display: block;
+    width: min(24rem, calc(100vw - 2rem));
+    height: 0.7rem;
+    content: "";
+    transform: translateX(-50%);
+  }
+
+  .abstract-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 8em;
+    padding: 0.28rem 0.75rem;
+    border-radius: $rounded-borders;
+    font-family: var(--font-text);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: help;
+  }
+
+  .abstract-preview {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.55rem);
+    z-index: 20;
+    display: block;
+    width: min(24rem, calc(100vw - 2rem));
+    max-height: 16rem;
+    overflow: auto;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(108, 117, 125, 0.22);
+    border-radius: $rounded-borders;
+    box-shadow: 0 0.7rem 2rem rgba(0, 0, 0, 0.22);
+    font-family: var(--font-text);
+    font-size: 0.84rem;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.35rem);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .article-abstract:hover .abstract-preview,
+  .article-abstract:focus-within .abstract-preview {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+  }
+
   .badge-keywords {
     color: #6ECCAF;
     border-color: #6ECCAF;
     border: 1px solid #6ECCAF;
+  }
+
+  .article-keywords .badge {
+    margin-bottom: 0.25rem;
   }
 
   // --- General Card Hover (for Grid View) ---
@@ -42,11 +117,12 @@
   list-style: none;
 
   .article-year-group {
-    font-size: 1.15rem;
-    font-weight: 700;
-    line-height: 1;
-    margin: 1.1rem 0 0.45rem;
-    padding: 0 0.15rem;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #35b7d8;
+    // border-bottom: 1px solid rgba(73, 238, 186, 0.35);
+    padding-bottom: 0.25rem;
   }
 
   .article-item { // Each individual card/item when displayed in list mode
@@ -196,14 +272,45 @@
   }
 }
 
-// Existing dark/light theme abstract_box styles
 [data-theme="dark"] {
-  .abstract_box {
-    width: 8em;
-    height: auto;
-    background-color: #144272;
-    border-radius: $rounded-borders;
+  #article-search,
+  #article-sort {
+    color: rgba(255, 255, 255, 0.86);
+    background-color: #212121;
+    border-color: #3a3a3a;
+    color-scheme: dark;
   }
+
+  #article-search::placeholder {
+    color: rgba(255, 255, 255, 0.48);
+  }
+
+  #article-sort option {
+    color: rgba(255, 255, 255, 0.86);
+    background-color: #212121;
+  }
+}
+
+[data-theme="light"] {
+  .articles-list .article-year-group {
+    color: #1b9fc0;
+  }
+}
+
+[data-theme="dark"] {
+  .article.card {
+    .abstract-trigger,
+    .abstract-preview {
+      background-color: #144272;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .abstract-preview {
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: 0 0.7rem 2rem rgba(0, 0, 0, 0.45);
+    }
+  }
+
   // Background for list items in dark mode
   .articles-list .article-item {
     background-color: #212121; /* A common dark card background */
@@ -213,12 +320,18 @@
 }
 
 [data-theme="light"] {
-  .abstract_box {
-    width: 8em;
-    height: auto;
-    background-color: #F0EEED;
-    border-radius: $rounded-borders;
+  .article.card {
+    .abstract-trigger,
+    .abstract-preview {
+      background-color: #F0EEED;
+      color: #343a40;
+    }
+
+    .abstract-preview {
+      border-color: rgba(52, 58, 64, 0.16);
+    }
   }
+
   // Background for list items in light mode
   .articles-list .article-item {
     background-color: #ffffff; /* Default white for light cards */

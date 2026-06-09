@@ -1,10 +1,117 @@
+$site-font-weights: (
+  100: "Thin",
+  200: "ExtraLight",
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+  800: "ExtraBold",
+  900: "Black"
+);
+
+$site-iosevka-font-weights: (
+  100: "Thin",
+  200: "ExtraLight",
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+  800: "ExtraBold",
+  900: "Heavy"
+);
+
+@mixin site-font-face($family, $folder, $file-prefix, $style: normal, $italic-suffix: "Italic") {
+  @each $weight, $weight-name in $site-font-weights {
+    $suffix: if($style == italic and $weight-name == "Regular", $italic-suffix, "#{$weight-name}#{$italic-suffix}");
+
+    @font-face {
+      font-family: $family;
+      src: url("../fonts/#{$folder}/woff2/#{$file-prefix}-#{$suffix}.woff2") format("woff2");
+      font-weight: $weight;
+      font-style: $style;
+      font-display: swap;
+    }
+  }
+}
+
+@mixin site-upright-font-face($family, $folder, $file-prefix, $weights: $site-font-weights) {
+  @each $weight, $weight-name in $weights {
+    @font-face {
+      font-family: $family;
+      src: url("../fonts/#{$folder}/woff2/#{$file-prefix}-#{$weight-name}.woff2") format("woff2");
+      font-weight: $weight;
+      font-style: normal;
+      font-display: swap;
+    }
+  }
+}
+
+@include site-font-face("SiteMontserrat", "montserrat", "Montserrat", normal, "");
+@include site-font-face("SiteMontserrat", "montserrat", "Montserrat", italic, "Italic");
+@include site-font-face("SitePoppins", "poppins", "Poppins", normal, "");
+@include site-font-face("SitePoppins", "poppins", "Poppins", italic, "Italic");
+@include site-font-face("SiteRoboto", "roboto", "Roboto", normal, "");
+@include site-font-face("SiteRoboto", "roboto", "Roboto", italic, "Italic");
+@include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", normal, "");
+@include site-font-face("SiteRobotoCondensed", "roboto", "Roboto_Condensed", italic, "Italic");
+@include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", normal, "");
+@include site-font-face("SiteRobotoSemiCondensed", "roboto", "Roboto_SemiCondensed", italic, "Italic");
+@include site-upright-font-face("SiteIosevkaTerm", "iosevka-term", "SGr-IosevkaTerm", $site-iosevka-font-weights);
+
+:root {
+  --font-sans: "SiteMontserrat", sans-serif;
+  --font-term: "SiteIosevkaTerm", monospace;
+  --font-text: var(--font-term);
+  --font-heading: var(--font-sans);
+}
+
 html {
   // padding-left: calc(100vw - 100%);
   padding-left: 0;
 }
 
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-text);
+}
+
+h1, h2, h3, h4, h5, h6,
+.header,
+.navbar,
+.navbar *,
+.short_title,
+.short_title * {
+  font-family: var(--font-heading);
+}
+
+pre,
+code,
+kbd,
+samp,
+.lj-md-diagnostics-readout,
+.lj-md-description-readout {
+  font-family: var(--font-term);
+}
+
+.fa,
+.far,
+.fas {
+  font-family: "Font Awesome 5 Free" !important;
+}
+
+.fab {
+  font-family: "Font Awesome 5 Brands" !important;
+}
+
+.fa,
+.fas {
+  font-weight: 900;
+}
+
+.far,
+.fab {
+  font-weight: 400;
 }
 
 .badge {

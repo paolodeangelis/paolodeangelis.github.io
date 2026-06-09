@@ -51,6 +51,12 @@
 	// transform: translate(50%,-50%);
   // max-width: 80%;
 	// padding: 3em 3em;
+  font-family: var(--font-text);
+}
+
+#container2 p,
+#container2 .text-muted {
+  font-family: var(--font-text);
 }
 
 #container2 .container-fluid {
