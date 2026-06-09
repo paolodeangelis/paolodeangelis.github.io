@@ -3,7 +3,7 @@ title: "Role of surface oxidation in enhancing heat transfer across graphene–w
 author: Fabiano Tarulli, Francesco Maria Bellussi, Marina Provenzano, <strong>Paolo De Angelis</strong>, Alessandro Casto, Margherita Vittucci, Natalia Del Fatti, Francesco Banfi, Paolo Maioli, Matteo Fasano
 journal: "International Communications in Heat and Mass Transfer"
 volume: 172
-number: 
+number:
 pages: 110364
 year: 2026
 month: 1
